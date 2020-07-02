@@ -7,7 +7,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
-from .helpers import timeit
+from helpers import timeit
 import copy
 
 
@@ -47,6 +47,12 @@ class Timer:
         }
     }
 
+    DEFAULT_LAMBDA = 700
+    DEFAULT_DIAMETER = 3
+    DEFAULT_R0 = 0.15 * (DEFAULT_LAMBDA/500)**1.2 
+    PSF_BETA = 5
+    PSF_RE = 1.0 # arcsec
+
     PSF_DEFAULT_CONFIG = {
         "lam": DEFAULT_LAMBDA,
         "diam": DEFAULT_DIAMETER,
@@ -54,7 +60,6 @@ class Timer:
         "psf_beta": PSF_BETA,
         "psf_re": PSF_RE
     }
-
 
     PSF_CONSTRUCTOR_DEFAULT_PARAMS = {
         "kolmogorov": {
@@ -215,13 +220,29 @@ class Timer:
             self.final_times.append(draw_img_time)
 
 
+    def plot_draw_times(self, axis=None):
+        if axis is None:
+            fig, axis = plt.subplot(1, 1)
 
+        axis.set_ylim(-0.05, 6.25)
+        axis.set_title(self.cur_gal_name + " " + self.cur_psf + " " + "\nTime (s) vs. Flux")
+        axis.set(xlabel="Flux", ylabel="Time (s)")
 
-    def plot_draw_times(self):
-        pass
+        axis.scatter(self.flux_scale, self.final_times, label=self.cur_gal_name)
+        slope, intercept, r_value, p_value, stderr = stats.linregress(self.flux_scale, self.final_times)
+        axis.plot(self.flux_scale, intercept + slope * flux_scale, 'tab:orange', label=self.cur_gal_name)
+
+        annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
+        axis.annotate(annotation, (5, 5))
 
     def __repr__(self):
-        pass
+        output = ("""
+        Galaxy Name: %s,
+        PSF Used: %s,
+        """ % (self.cur_gal_name, self.cur_psf))
+
+        return output
+
 
     def compute_all(self):
         pass
