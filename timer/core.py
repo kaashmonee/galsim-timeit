@@ -11,6 +11,12 @@ from helpers import timeit
 import copy
 
 
+# Initializing logger...
+# The only thing that should be done globally.
+logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+logger = logging.getLogger("Timer")
+
+
 class Timer:
 
     GALAXY_NAMES = {
@@ -82,6 +88,14 @@ class Timer:
         }
     }
 
+    PSF_CONSTRUCTORS = {
+        "vonkarman": galsim.VonKarman,
+        "kolmogorov": galsim.Kolmogorov,
+        "airy": galsim.Airy,
+        "moffat": galsim.Moffat,
+        "optical": galsim.OpticalPSF
+    }
+
     PSFS = {
         "vonkarman": "VonKarman PSF",
         "airy": "Airy PSF",
@@ -89,7 +103,8 @@ class Timer:
         "kolmogorov": "Kolmogorov PSF",
         "optical": "Optical PSF"
     }
-    
+
+
     def __init__(self, galaxy, flux_range : tuple, num_intervals=15, debug=False, **kwargs):
         """
         Timer object constructor. Takes in a type of galaxy and the flux range
@@ -102,8 +117,19 @@ class Timer:
         # Starting and ending indices
         (start, end) = flux_range
 
+        # Setting up debug mode functionality
+        # This indicates the number of intervals we're going to have. 
+        # This will depend on whether or not we're running in debug mode.
+        # By default, we are not going to be running in debug mode.
+
+        # The number of intervals that the user specified.
+        self.num_intervals = num_intervals
+
+        # In debug mode, the number of intervals are going to be a lot less.
+        self.num_debug_intervals = 5
+
         # Debug flag. We compute and plot fewer fluxes if the debug flag is set to true
-        self.debug = debug
+        self.set_debug(debug)
 
         # Creating the flux range
         self.fluxs = np.linspace(start, end, num_intervals)
@@ -122,14 +148,24 @@ class Timer:
         # The timing after the convolution
         self.final_times = []
 
+        # The drawn images
         self.rendered_images = []
 
         # Initializing the galaxy
         self.set_galaxy(galaxy, **kwargs)
 
+        # rng
+        self.random_seed = 15434225
+        self.rng = galsim.BaseDeviate(self.random_seed + 1)
+        
 
-    def toggle_debug(self):
-        self.debug = not self.debug
+
+    def set_debug(self, debug):
+        self.debug = debug
+        if debug:
+            self.cur_num_intervals = self.num_debug_intervals
+        else:
+            self.cur_num_intervals = self.num_intervals
 
 
     def time_init(self, random_offset_range=0, repeat=1):
@@ -166,16 +202,16 @@ class Timer:
         self.init_times_repeated = repeat
 
 
-    def plot_init_times(self):
-        plt.title("Setup Time vs. Flux (Averaged over %d runs" % self.init_times_repeated)
-        plt.xlabel("Flux")
-        plt.ylabel(r"Setup Time ($\mu$s)")
+    def plot_init_times(self, axis=None):
+        if axis is None:
+            fig, axis = plt.subplots(1, 1)
 
-        plt.plot(self.flux_scale, np.array(self.init_times) * 10**6, label=self.cur_gal_name)
+        axis.set_title("Setup Time vs. Flux (Averaged over %d runs" % self.init_times_repeated)
+        axis.set(xlabel="Flux", ylabel=r"Setup Time ($\mu$s)")
 
-        plt.legend()
-        plt.show()
-        plt.figure()
+        axis.plot(self.flux_scale, np.array(self.init_times) * 10**6, label=self.cur_gal_name)
+
+        logger.info("Done plotting init...")
 
 
     def set_galaxy(self, gal : str, **kwargs):
@@ -213,22 +249,27 @@ class Timer:
         Takes in a PSF and its parameters. If the **kwargs is left blank,
         it uses a default set of parameters already defined. 
         """
-        self.set_psf(psf, kwargs)
-        convolution_times = np.zeros(len(flux_scale))
-        final_times = np.zeros(len(flux_scale))
+        self.set_psf(psf, **kwargs)
+
+        logger.info("Computing draw times for the %s profile convolved with %s for %d flux levels." % (self.cur_gal_name, self.cur_psf, self.cur_num_intervals))
+        if self.debug:
+            logger.info("NOTE: running in debug mode.")
 
         for gal_ind, gal in enumerate(self.cur_gal_objs):
             convolved_img_final = galsim.Convolve([gal, self.cur_psf_obj])
 
-            img, draw_img_time = timeit(cnvl_img_final.drawImage) (phot_image, method="phot", rng=rng)
+            img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng)
 
-            self.images.append(img)
+            self.rendered_images.append(img)
             self.final_times.append(draw_img_time)
+
+            logger.info("Drawing %d/%d" % (gal_ind+1, self.cur_num_intervals))
+
 
 
     def plot_draw_times(self, axis=None):
         if axis is None:
-            fig, axis = plt.subplot(1, 1)
+            fig, axis = plt.subplots(1, 1)
 
         axis.set_ylim(-0.05, 6.25)
         axis.set_title(self.cur_gal_name + " " + self.cur_psf + " " + "\nTime (s) vs. Flux")
@@ -236,7 +277,7 @@ class Timer:
 
         axis.scatter(self.flux_scale, self.final_times, label=self.cur_gal_name)
         slope, intercept, r_value, p_value, stderr = stats.linregress(self.flux_scale, self.final_times)
-        axis.plot(self.flux_scale, intercept + slope * flux_scale, 'tab:orange', label=self.cur_gal_name)
+        axis.plot(self.flux_scale, intercept + slope * self.flux_scale, 'tab:orange', label=self.cur_gal_name)
 
         annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
         axis.annotate(annotation, (5, 5))
@@ -252,9 +293,11 @@ class Timer:
 
     def compute_all(self):
         pass
-
-    def draw_all(self):
-        pass
+    
+    @staticmethod
+    def draw_all():
+        plt.legend()
+        plt.show()
 
 
 
