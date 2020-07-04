@@ -180,10 +180,12 @@ class Timer:
             self.cur_gal_name = Timer.GALAXY_NAMES[gal]
             self.cur_gal_name_constructor = Timer.GALAXY_CONSTRUCTORS[gal]
 
+            # If kwargs are empty...
             if not bool(kwargs):
-                self.default_gal_args = kwargs
-            else:
                 self.default_gal_args = Timer.GALAXY_CONSTRUCTOR_DEFAULT_PARAMS[gal]
+            else:
+                self.default_gal_args = kwargs
+
         else:
             raise ValueError("Please choose a valid galaxy profile.")
         
