@@ -116,6 +116,9 @@ class Timer:
         # The current galaxy associated with this Timer class.
         self.cur_gal_objs = []
 
+        # Setup times
+        self.init_times = []
+
         # The timing after the convolution
         self.final_times = []
 
@@ -164,11 +167,11 @@ class Timer:
 
 
     def plot_init_times(self):
-        plt.title("Setup Time vs. Flux (Averaged over %d runs" % self.repeat)
+        plt.title("Setup Time vs. Flux (Averaged over %d runs" % self.init_times_repeated)
         plt.xlabel("Flux")
         plt.ylabel(r"Setup Time ($\mu$s)")
 
-        plt.plot(self.flux_scale, self.setup_times * 10**6, label=self.cur_gal_name)
+        plt.plot(self.flux_scale, np.array(self.init_times) * 10**6, label=self.cur_gal_name)
 
         plt.legend()
         plt.show()
