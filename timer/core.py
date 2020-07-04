@@ -115,7 +115,7 @@ class Timer:
         self.set_galaxy(galaxy)
 
         # Starting and ending indices
-        (start, end) = flux_range
+        (self.start, self.end) = flux_range
 
         # Setting up debug mode functionality
         # This indicates the number of intervals we're going to have. 
@@ -130,14 +130,6 @@ class Timer:
 
         # Debug flag. We compute and plot fewer fluxes if the debug flag is set to true
         self.set_debug(debug)
-
-        # Creating the flux range
-        self.fluxs = np.linspace(start, end, num_intervals)
-        self.log_fluxs = np.logspace(np.log(start), np.log(end), num_intervals)
-
-        # Default scale is linear
-        # Change this using the change_flux_scale routine.
-        self.flux_scale = self.fluxs
 
         # The current galaxy associated with this Timer class.
         self.cur_gal_objs = []
@@ -167,6 +159,13 @@ class Timer:
         else:
             self.cur_num_intervals = self.num_intervals
 
+        # Creating the flux range
+        self.fluxs = np.linspace(self.start, self.end, self.cur_num_intervals)
+        self.log_fluxs = np.logspace(np.log(self.start), np.log(self.end), self.num_intervals)
+
+        # Default scale is linear
+        # Change this using the change_flux_scale routine.
+        self.flux_scale = self.fluxs
 
     def time_init(self, random_offset_range=0, repeat=1):
         """
