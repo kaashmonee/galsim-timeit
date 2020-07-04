@@ -90,7 +90,7 @@ class Timer:
         "optical": "Optical PSF"
     }
     
-    def __init__(self, galaxy, flux_range : tuple, psf, num_intervals=15, debug=False):
+    def __init__(self, galaxy, flux_range : tuple, num_intervals=15, debug=False, **kwargs):
         """
         Timer object constructor. Takes in a type of galaxy and the flux range
         to vary. The flux range is a tuple that takes in the min flux and the max flux.
@@ -98,9 +98,6 @@ class Timer:
         """
         # Setting the galaxy
         self.set_galaxy(galaxy)
-
-        # Setting the PSF to convolve with
-        self.set_psf(psf)
 
         # Starting and ending indices
         (start, end) = flux_range
@@ -124,6 +121,9 @@ class Timer:
 
         self.rendered_images = []
 
+        # Initializing the galaxy
+        self.set_galaxy(galaxy, **kwargs)
+
 
     def toggle_debug(self):
         self.debug = not self.debug
@@ -139,9 +139,10 @@ class Timer:
         # Copies the default galaxy arguments and updates it
         # in the loop
         temp_params = copy.deepcopy(self.default_gal_args)
+        print("temp_params:", temp_params)
 
         for i, gal_flux in enumerate(self.flux_scale):
-            rand_offset = np.random.random_sample() / (1 / random_offset) if random_offset_range == 0 else 0
+            rand_offset = np.random.random_sample() / (1 / random_offset_range) if random_offset_range != 0 else 0
 
             temp_params["flux"] = gal_flux
 
