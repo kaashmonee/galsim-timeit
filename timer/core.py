@@ -12,7 +12,7 @@ import copy
 
 
 # Initializing logger...
-# The only thing that should be done globally.
+# This is the only thing that should be done globally.
 logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger("Timer")
 
@@ -202,6 +202,13 @@ class Timer:
 
 
     def plot_init_times(self, axis=None):
+        """
+        This routine should be called AFTER the time_init() routine is called.
+        This is the view for the `time_init` function. After time_init is called,
+        this routine plots the time taken to initialize the specified galaxy profile
+        vs. the flux. 
+        """
+
         if axis is None:
             fig, axis = plt.subplots(1, 1)
 
@@ -243,7 +250,7 @@ class Timer:
         else:
             raise ValueError("Please choose a valid PSF name.")
 
-    def compute_draw_times(self, psf, **kwargs):
+    def compute_phot_draw_times(self, psf, **kwargs):
         """
         Takes in a PSF and its parameters. If the **kwargs is left blank,
         it uses a default set of parameters already defined. 
@@ -263,7 +270,6 @@ class Timer:
             self.final_times.append(draw_img_time)
 
             logger.info("Drawing %d/%d" % (gal_ind+1, self.cur_num_intervals))
-
 
 
     def plot_draw_times(self, axis=None):
