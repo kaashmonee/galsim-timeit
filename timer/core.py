@@ -7,7 +7,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
-from timer.helpers import timeit
+from helpers import timeit
 import copy
 
 
@@ -212,7 +212,14 @@ class Timer:
         if axis is None:
             fig, axis = plt.subplots(1, 1)
 
-        axis.set_title("Setup Time vs. Flux (Averaged over %d runs" % self.init_times_repeated)
+        # If the user attempts to run this function before actually running time_init, it 
+        # should catch the exception and re-raise it with a helpful error message that tells
+        # the user to run the time_init function first.
+        try:
+            axis.set_title("Setup Time vs. Flux (Averaged over %d runs" % self.init_times_repeated)
+        except AttributeError as e:
+            raise AttributeError(str(e) + "\nPlease run the time_init routine first.")
+
         axis.set(xlabel="Flux", ylabel=r"Setup Time ($\mu$s)")
 
         axis.plot(self.flux_scale, np.array(self.init_times) * 10**6, label=self.cur_gal_name)
@@ -277,7 +284,15 @@ class Timer:
             fig, axis = plt.subplots(1, 1)
 
         axis.set_ylim(-0.05, 6.25)
-        axis.set_title(self.cur_gal_name + " " + self.cur_psf + " " + "\nTime (s) vs. Flux")
+
+        # If this fails, this means that the user has not run the compute_phot_draw_times
+        # routine. This catches the exception and raises another one suggesting that the
+        # user do that first.
+        try:
+            axis.set_title(self.cur_gal_name + " " + self.cur_psf + " " + "\nTime (s) vs. Flux")
+        except AttributeError as e:
+            raise AttributeError(str(e) + "\nPlease run the compute_phot_draw_times routine first.")
+
         axis.set(xlabel="Flux", ylabel="Time (s)")
 
         axis.scatter(self.flux_scale, self.final_times, label=self.cur_gal_name)
