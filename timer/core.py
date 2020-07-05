@@ -153,6 +153,10 @@ class Timer:
 
 
     def set_debug(self, debug):
+        """
+        Sets an internal debug flag. If true, then changes the number of flux levels and plots
+        fewer flux points.
+        """
         self.debug = debug
         if debug:
             self.cur_num_intervals = self.num_debug_intervals
@@ -161,7 +165,7 @@ class Timer:
 
         # Creating the flux range
         self.fluxs = np.linspace(self.start, self.end, self.cur_num_intervals)
-        self.log_fluxs = np.logspace(np.log(self.start), np.log(self.end), self.num_intervals)
+        self.log_fluxs = np.logspace(np.log(self.start), np.log(self.end), self.cur_num_intervals)
 
         # Default scale is linear
         # Change this using the change_flux_scale routine.
@@ -228,6 +232,12 @@ class Timer:
 
 
     def set_galaxy(self, gal : str, **kwargs):
+        """
+        An internal routine used by this function to choose a galaxy constructor with a 
+        specified set of parameters. If kwargs is empty, then it uses the default set
+        of parameters initialized above.
+        """
+
         if gal in {"exponential", "gaussian", "devaucouleurs", "sersic"}:
             self.cur_gal_name = Timer.GALAXY_NAMES[gal]
             self.cur_gal_name_constructor = Timer.GALAXY_CONSTRUCTORS[gal]
@@ -243,6 +253,12 @@ class Timer:
         
 
     def set_psf(self, psf : str, **kwargs):
+        """
+        Takes in the name of a PSF as a string and optional keyword arguments.
+        If additional kwargs are provided, then it constructor is used on the 
+        optional arguments provided.
+        """
+
         if psf in {"vonkarman", "airy", "moffat", "kolmogorov", "optical"}:
             self.cur_psf = Timer.PSFS[psf]
             self.cur_psf_constructor = Timer.PSF_CONSTRUCTORS[psf]
@@ -280,6 +296,10 @@ class Timer:
 
 
     def plot_draw_times(self, axis=None):
+        """
+        A plotting routine to draw the times taken to do photon shooting.
+        """
+
         if axis is None:
             fig, axis = plt.subplots(1, 1)
 
