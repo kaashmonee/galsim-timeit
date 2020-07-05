@@ -9,6 +9,7 @@ import numpy as np
 from scipy import stats
 from timer.helpers import timeit
 import copy
+import pathlib
 
 
 # Initializing logger...
@@ -260,8 +261,14 @@ class Timer:
         """
 
         if psf in {"vonkarman", "airy", "moffat", "kolmogorov", "optical"}:
-            self.cur_psf = Timer.PSFS[psf]
+            self.cur_psf_name = psf
+            self.cur_psf_disp_name = Timer.PSFS[psf]
             self.cur_psf_constructor = Timer.PSF_CONSTRUCTORS[psf]
+
+            # Reset to empty lists to make sure that previous
+            # runs with a different PSF aren't preserved.
+            self.rendered_images = []
+            self.final_times = []
 
             if not bool(kwargs):
                 self.cur_psf_args = Timer.PSF_CONSTRUCTOR_DEFAULT_PARAMS[psf]
@@ -279,7 +286,7 @@ class Timer:
         it uses a default set of parameters already defined. 
         """
         try:
-            logger.info("Computing draw times for the %s profile convolved with %s for %d flux levels." % (self.cur_gal_name, self.cur_psf, self.cur_num_intervals))
+            logger.info("Computing draw times for the %s profile convolved with %s for %d flux levels." % (self.cur_gal_name, self.cur_psf_disp_name, self.cur_num_intervals))
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease set the psf first using set_psf.")
         
@@ -292,10 +299,43 @@ class Timer:
 
             img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng)
 
-            self.rendered_images.append(img)
+            img_metadata = {
+                "galaxy": self.cur_gal_name,
+                "psf": self.cur_psf_name,
+                "flux": self.flux_scale[gal_ind],
+                "method": "photon_shooting"
+            }
+            self.rendered_images.append((img, img_metadata))
             self.final_times.append(draw_img_time)
 
             logger.info("Drawing %d/%d" % (gal_ind+1, self.cur_num_intervals))
+
+
+    def save_phot_shoot_images(self, directory=""):
+        """
+        If this function is called after compute_phot_draw_images,
+        then it saves all the generated images to a directory in 
+        examples/output. The user can also choose a directory by
+        populating the directory parameter.
+        """
+
+        # Gets the parent of the directory where the current file is in.
+        # This is guaranteed to be the root, since the structure of this project
+        # should not change.
+        root = pathlib.Path(__file__).parent.parent.resolve() 
+
+        default_dir = os.path.join(root, "examples", "output")
+
+        save_dir = default_dir if directory == "" else directory
+
+        if not os.path.isdir(save_dir):
+            os.mkdir(save_dir)
+
+        for (ind, (img, imgdata)) in enumerate(self.rendered_images):
+            img_name = imgdata["galaxy"] + "_conv_" + imgdata["psf"] + "_" + str(imgdata["flux"]) + "_" + imgdata["method"] + ".fits"
+            file_name = os.path.join(save_dir, img_name)
+            img.write(file_name)
+            logger.info("Wrote image %d/%d to %r" % (ind+1, len(self.rendered_images), file_name))
 
 
     def plot_draw_times(self, axis=None):
@@ -306,13 +346,13 @@ class Timer:
         if axis is None:
             fig, axis = plt.subplots(1, 1)
 
-        axis.set_ylim(-0.05, 6.25)
+        # axis.set_ylim(-0.05, 6.25)
 
         # If this fails, this means that the user has not run the compute_phot_draw_times
         # routine. This catches the exception and raises another one suggesting that the
         # user do that first.
         try:
-            axis.set_title(self.cur_gal_name + " " + self.cur_psf + " " + "\nTime (s) vs. Flux")
+            axis.set_title(self.cur_gal_name + " Profile Convolved with " + self.cur_psf_name + " " + "\nTime (s) vs. Flux")
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease run the compute_phot_draw_times routine first.")
 
@@ -329,7 +369,7 @@ class Timer:
         output = ("""
         Galaxy Name: %s,
         PSF Used: %s,
-        """ % (self.cur_gal_name, self.cur_psf))
+        """ % (self.cur_gal_name, self.cur_psf_disp_name))
 
         return output
 
@@ -341,6 +381,7 @@ class Timer:
     def draw_all():
         plt.legend()
         plt.show()
+        plt.figure()
 
 
 
