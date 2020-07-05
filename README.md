@@ -7,5 +7,11 @@ Intended to time different FFT and photon shooting routines.
 
 Clone the `GalSim` repo.
 `git clone` inside the GalSim repo.
+Run `pip install .`
 
+## Usage
+python```
+from timer import Timer
+
+```
 
