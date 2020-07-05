@@ -10,7 +10,7 @@ Clone the `GalSim` repo.
 Run `pip install .`
 
 ## Usage
-python```
+```python
 from timer import Timer
 
 ```
