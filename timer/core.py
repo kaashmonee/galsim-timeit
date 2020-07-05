@@ -265,6 +265,11 @@ class Timer:
             self.cur_psf_disp_name = Timer.PSFS[psf]
             self.cur_psf_constructor = Timer.PSF_CONSTRUCTORS[psf]
 
+            # Reset to empty lists to make sure that previous
+            # runs with a different PSF aren't preserved.
+            self.rendered_images = []
+            self.final_times = []
+
             if not bool(kwargs):
                 self.cur_psf_args = Timer.PSF_CONSTRUCTOR_DEFAULT_PARAMS[psf]
             else:
@@ -307,6 +312,12 @@ class Timer:
 
 
     def save_phot_shoot_images(self, directory=""):
+        """
+        If this function is called after compute_phot_draw_images,
+        then it saves all the generated images to a directory in 
+        examples/output. The user can also choose a directory by
+        populating the directory parameter.
+        """
 
         # Gets the parent of the directory where the current file is in.
         # This is guaranteed to be the root, since the structure of this project
