@@ -113,7 +113,7 @@ class Timer:
         flux_range : (min_flux, max_flux)
         """
         # Setting the galaxy
-        self.set_galaxy(galaxy)
+        self.set_galaxy(galaxy, **kwargs)
 
         # Starting and ending indices
         (self.start, self.end) = flux_range
@@ -311,7 +311,7 @@ class Timer:
             logger.info("Drawing %d/%d" % (gal_ind+1, self.cur_num_intervals))
 
 
-    def save_phot_shoot_images(self, directory=""):
+    def save_phot_shoot_images(self, directory="", save=True, show=False):
         """
         If this function is called after compute_phot_draw_images,
         then it saves all the generated images to a directory in 
@@ -331,11 +331,19 @@ class Timer:
         if not os.path.isdir(save_dir):
             os.mkdir(save_dir)
 
-        for (ind, (img, imgdata)) in enumerate(self.rendered_images):
-            img_name = imgdata["galaxy"] + "_conv_" + imgdata["psf"] + "_" + str(imgdata["flux"]) + "_" + imgdata["method"] + ".fits"
-            file_name = os.path.join(save_dir, img_name)
-            img.write(file_name)
-            logger.info("Wrote image %d/%d to %r" % (ind+1, len(self.rendered_images), file_name))
+        if save:
+            for (ind, (img, imgdata)) in enumerate(self.rendered_images):
+                img_name = imgdata["galaxy"] + "_conv_" + imgdata["psf"] + "_" + str(imgdata["flux"]) + "_" + imgdata["method"] + ".fits"
+                file_name = os.path.join(save_dir, img_name)
+                img.write(file_name)
+                logger.info("Wrote image %d/%d to %r" % (ind+1, len(self.rendered_images), file_name))
+        
+        if show:
+            for (ind, (img, imgdata)) in enumerate(self.rendered_images):
+                logger.info("Displaying image %d/%d\nGalaxy: %s, PSF: %s, Flux: %s" % (ind+1, len(self.rendered_images), imgdata["galaxy"], imgdata["psf"], str(imgdata["flux"])))
+                plt.imshow(img.array, cmap="gray")
+
+
 
 
     def plot_draw_times(self, axis=None):
@@ -346,7 +354,6 @@ class Timer:
         if axis is None:
             fig, axis = plt.subplots(1, 1)
 
-        # axis.set_ylim(-0.05, 6.25)
 
         # If this fails, this means that the user has not run the compute_phot_draw_times
         # routine. This catches the exception and raises another one suggesting that the
@@ -381,7 +388,7 @@ class Timer:
     def draw_all():
         plt.legend()
         plt.show()
-        plt.figure()
+        # plt.figure()
 
 
 
