@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="galsim_timeit",
+    name="galsim-timeit",
     version="0.0.1",
     author="Skanda Kaashyap",
     author_email="skaashya@andrew.cmu.edu",

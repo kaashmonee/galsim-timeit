@@ -15,7 +15,9 @@ def main():
     exp_kolm_t.time_init()
     exp_kolm_t.plot_init_times()
 
-    exp_kolm_t.compute_phot_draw_times("kolmogorov")
+    exp_kolm_t.set_psf("kolmogorov")
+    exp_kolm_t.compute_phot_draw_times()
+    # exp_kolm_t.save_image()
     exp_kolm_t.plot_draw_times()
 
 
