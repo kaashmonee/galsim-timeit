@@ -292,10 +292,23 @@ class Timer:
 
             img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng)
 
-            self.rendered_images.append(img)
+            img_metadata = {
+                "galaxy": self.cur_gal_name,
+                "psf": self.cur_psf,
+                "flux": self.flux_scale[gal_ind],
+                "method": "Photon Shooting"
+            }
+            self.rendered_images.append((img, img_metadata))
             self.final_times.append(draw_img_time)
 
             logger.info("Drawing %d/%d" % (gal_ind+1, self.cur_num_intervals))
+
+
+    def save_phot_shoot_images(self, path=""):
+
+        # Unzipping the images into a list of images and a list of its data
+        images, imgdata = [imgdat[0] for imgdat in self.rendered_images], [imgdat[1] for imgdat in self.rendered_images]
+        
 
 
     def plot_draw_times(self, axis=None):
@@ -306,13 +319,13 @@ class Timer:
         if axis is None:
             fig, axis = plt.subplots(1, 1)
 
-        axis.set_ylim(-0.05, 6.25)
+        # axis.set_ylim(-0.05, 6.25)
 
         # If this fails, this means that the user has not run the compute_phot_draw_times
         # routine. This catches the exception and raises another one suggesting that the
         # user do that first.
         try:
-            axis.set_title(self.cur_gal_name + " " + self.cur_psf + " " + "\nTime (s) vs. Flux")
+            axis.set_title(self.cur_gal_name + " Profile Convolved with " + self.cur_psf + " " + "\nTime (s) vs. Flux")
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease run the compute_phot_draw_times routine first.")
 
@@ -341,6 +354,7 @@ class Timer:
     def draw_all():
         plt.legend()
         plt.show()
+        plt.figure()
 
 
 

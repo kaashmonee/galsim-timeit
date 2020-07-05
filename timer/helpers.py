@@ -1,4 +1,7 @@
 import time
+import galsim
+from astropy.io import fits
+
 
 def timeit(func, repeat : int = 1):
     """
