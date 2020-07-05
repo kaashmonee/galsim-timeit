@@ -273,14 +273,17 @@ class Timer:
         else:
             raise ValueError("Please choose a valid PSF name.")
 
-    def compute_phot_draw_times(self, psf, **kwargs):
+    def compute_phot_draw_times(self):
         """
         Takes in a PSF and its parameters. If the **kwargs is left blank,
         it uses a default set of parameters already defined. 
         """
-        self.set_psf(psf, **kwargs)
+        try:
+            logger.info("Computing draw times for the %s profile convolved with %s for %d flux levels." % (self.cur_gal_name, self.cur_psf, self.cur_num_intervals))
+        except AttributeError as e:
+            raise AttributeError(str(e) + "\nPlease set the psf first using set_psf.")
+        
 
-        logger.info("Computing draw times for the %s profile convolved with %s for %d flux levels." % (self.cur_gal_name, self.cur_psf, self.cur_num_intervals))
         if self.debug:
             logger.info("NOTE: running in debug mode.")
 
