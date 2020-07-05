@@ -1,10 +1,11 @@
-from core import Timer
+from timer import Timer
+
 
 def main():
     """
-    An example main routine. This main function should function as a 
+    An example main routine. This main function should function as a
     series of examples of how to use this utility. It also serves
-    to test all the routines and plot them to ensure that they are 
+    to test all the routines and plot them to ensure that they are
     working properly. This can be changed to suit your needs.
     """
 
@@ -14,7 +15,7 @@ def main():
     exp_kolm_t.time_init()
     exp_kolm_t.plot_init_times()
 
-    # exp_kolm_t.compute_phot_draw_times("kolmogorov")
+    exp_kolm_t.compute_phot_draw_times("kolmogorov")
     exp_kolm_t.plot_draw_times()
 
 

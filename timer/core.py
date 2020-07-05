@@ -7,7 +7,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
-from helpers import timeit
+from timer.helpers import timeit
 import copy
 
 
