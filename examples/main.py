@@ -22,10 +22,6 @@ def main():
     exp_kolm_t.plot_draw_times()
 
 
-    Timer.draw_all()
-
-
-
 if __name__ == "__main__":
     main()
 

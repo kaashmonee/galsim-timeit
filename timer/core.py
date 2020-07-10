@@ -214,6 +214,8 @@ class Timer:
         vs. the flux. 
         """
 
+        axis_is_none = not bool(axis)
+
         if axis is None:
             fig, axis = plt.subplots(1, 1)
 
@@ -221,7 +223,8 @@ class Timer:
         # should catch the exception and re-raise it with a helpful error message that tells
         # the user to run the time_init function first.
         try:
-            axis.set_title("Setup Time vs. Flux (Averaged over %d runs)" % self.init_times_repeated)
+            title = "Setup Time vs. Flux (Averaged over %d runs)" % self.init_times_repeated
+            axis.set_title(title)
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease run the time_init routine first.")
 
@@ -230,6 +233,13 @@ class Timer:
         axis.plot(self.flux_scale, np.array(self.init_times) * 10**6, label=self.cur_gal_name)
 
         logger.info("Done plotting init...")
+
+        # If the user specifies an axis, this means they want to manage the plotting themselves.
+        # We then do not want to call show() prematurely, because the user will be responsible for
+        # calling show when they've plotted everything they want to on the axes they want to.
+        if axis_is_none:
+            fig.canvas.set_window_title(title)
+            plt.show()
 
 
     def set_galaxy(self, gal : str, **kwargs):
@@ -341,9 +351,10 @@ class Timer:
         
         if show:
             for (ind, (img, imgdata)) in enumerate(self.rendered_images):
-                logger.info("Displaying image %d/%d\nGalaxy: %s, PSF: %s, Flux: %s" % (ind+1, len(self.rendered_images), imgdata["galaxy"], imgdata["psf"], str(imgdata["flux"])))
+                logger_text = "Image %d/%d\nGalaxy: %s, PSF: %s, Flux: %s" % (ind+1, len(self.rendered_images), imgdata["galaxy"], imgdata["psf"], str(imgdata["flux"]))
+                logger.info(logger_text)
+                plt.figure(logger_text)
                 plt.imshow(img.array, cmap="gray")
-
 
 
 
@@ -351,16 +362,20 @@ class Timer:
         """
         A plotting routine to draw the times taken to do photon shooting.
         """
+        
+        axis_is_none = not bool(axis)
 
         if axis is None:
-            fig, axis = plt.subplots(1, 1)
+            fig, axis = plt.subplots()
 
 
         # If this fails, this means that the user has not run the compute_phot_draw_times
         # routine. This catches the exception and raises another one suggesting that the
         # user do that first.
+
         try:
-            axis.set_title(self.cur_gal_name + " Profile Convolved with " + self.cur_psf_disp_name + " " + "\nTime (s) vs. Flux")
+            title = self.cur_gal_name + " Profile Convolved with " + self.cur_psf_disp_name + " " + "\nTime (s) vs. Flux"
+            axis.set_title(title) 
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease run the compute_phot_draw_times routine first.")
 
@@ -372,6 +387,13 @@ class Timer:
 
         annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
         axis.annotate(annotation, (5, 5))
+
+        # If the user specifies an axis, this means they want to manage the plotting themselves.
+        # We then do not want to call show() prematurely, because the user will be responsible for
+        # calling show when they've plotted everything they want to on the axes they want to.
+        if axis_is_none: 
+            fig.canvas.set_window_title(title)
+            plt.show()
 
     def __repr__(self):
         output = ("""
@@ -385,10 +407,5 @@ class Timer:
     def compute_all(self):
         pass
     
-    @staticmethod
-    def draw_all():
-        plt.legend()
-        plt.show()
-
-
+    
 
