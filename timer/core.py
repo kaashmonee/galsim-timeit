@@ -221,7 +221,7 @@ class Timer:
         # should catch the exception and re-raise it with a helpful error message that tells
         # the user to run the time_init function first.
         try:
-            axis.set_title("Setup Time vs. Flux (Averaged over %d runs" % self.init_times_repeated)
+            axis.set_title("Setup Time vs. Flux (Averaged over %d runs)" % self.init_times_repeated)
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease run the time_init routine first.")
 
@@ -280,7 +280,7 @@ class Timer:
         else:
             raise ValueError("Please choose a valid PSF name.")
 
-    def compute_phot_draw_times(self):
+    def compute_phot_draw_times(self, **kwargs):
         """
         Takes in a PSF and its parameters. If the **kwargs is left blank,
         it uses a default set of parameters already defined. 
@@ -297,7 +297,7 @@ class Timer:
         for gal_ind, gal in enumerate(self.cur_gal_objs):
             convolved_img_final = galsim.Convolve([gal, self.cur_psf_obj])
 
-            img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng)
+            img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng, **kwargs)
 
             img_metadata = {
                 "galaxy": self.cur_gal_name,
@@ -333,7 +333,8 @@ class Timer:
 
         if save:
             for (ind, (img, imgdata)) in enumerate(self.rendered_images):
-                img_name = imgdata["galaxy"] + "_conv_" + imgdata["psf"] + "_" + str(imgdata["flux"]) + "_" + imgdata["method"] + ".fits"
+                debug = "debug" if self.debug else ""
+                img_name = imgdata["galaxy"] + "_conv_" + imgdata["psf"] + "_" + str(imgdata["flux"]) + "_" + imgdata["method"] + debug + ".fits"
                 file_name = os.path.join(save_dir, img_name)
                 img.write(file_name)
                 logger.info("Wrote image %d/%d to %r" % (ind+1, len(self.rendered_images), file_name))
@@ -359,7 +360,7 @@ class Timer:
         # routine. This catches the exception and raises another one suggesting that the
         # user do that first.
         try:
-            axis.set_title(self.cur_gal_name + " Profile Convolved with " + self.cur_psf_name + " " + "\nTime (s) vs. Flux")
+            axis.set_title(self.cur_gal_name + " Profile Convolved with " + self.cur_psf_disp_name + " " + "\nTime (s) vs. Flux")
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease run the compute_phot_draw_times routine first.")
 
@@ -388,7 +389,6 @@ class Timer:
     def draw_all():
         plt.legend()
         plt.show()
-        # plt.figure()
 
 
 
