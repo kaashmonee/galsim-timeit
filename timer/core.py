@@ -386,7 +386,9 @@ class Timer:
         axis.plot(self.flux_scale, intercept + slope * self.flux_scale, 'tab:orange', label=self.cur_gal_name)
 
         annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
-        axis.annotate(annotation, (5, 5))
+
+        top_right = (max(self.flux_scale) * 0.75, max(self.final_times) * 0.75)
+        axis.annotate(annotation, top_right)
 
         # If the user specifies an axis, this means they want to manage the plotting themselves.
         # We then do not want to call show() prematurely, because the user will be responsible for
