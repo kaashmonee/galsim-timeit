@@ -37,19 +37,15 @@ class Timer:
     GALAXY_CONSTRUCTOR_DEFAULT_PARAMS = {
         "exponential": {
             "half_light_radius": 1,
-            "flux": 0
         },
         "gaussian": {
             "half_light_radius": 1,
-            "flux": 0
         },
         "devaucouleurs": {
             "half_light_radius": 1,
-            "flux": 0
         },
         "sersic": {
             "half_light_radius": 1,
-            "flux": 0,
             "n": 2.5
         }
     }
@@ -86,6 +82,11 @@ class Timer:
         "optical": {
             "lam": PSF_DEFAULT_CONFIG["lam"],
             "diam": PSF_DEFAULT_CONFIG["diam"]
+        },
+        "airy": {
+            "lam": PSF_DEFAULT_CONFIG["lam"],
+            "diam": PSF_DEFAULT_CONFIG["diam"],
+            "scale_unit": galsim.arcsec
         }
     }
 
@@ -230,7 +231,9 @@ class Timer:
 
         axis.set(xlabel="Flux", ylabel=r"Setup Time ($\mu$s)")
 
-        axis.plot(self.flux_scale, np.array(self.init_times) * 10**6, label=self.cur_gal_name)
+        # Omit the first point 
+        # This is because the first point dominates the time taken
+        axis.plot(self.flux_scale[1:], np.array(self.init_times)[1:] * 10**6, label=self.cur_gal_name)
 
         logger.info("Done plotting init...")
 
@@ -381,9 +384,9 @@ class Timer:
 
         axis.set(xlabel="Flux", ylabel="Time (s)")
 
-        axis.scatter(self.flux_scale, self.final_times, label=self.cur_gal_name)
+        axis.scatter(self.flux_scale[1:], self.final_times[1:], label=self.cur_gal_name)
         slope, intercept, r_value, p_value, stderr = stats.linregress(self.flux_scale, self.final_times)
-        axis.plot(self.flux_scale, intercept + slope * self.flux_scale, 'tab:orange', label=self.cur_gal_name)
+        axis.plot(self.flux_scale[1:], intercept + slope * self.flux_scale[1:], 'tab:orange', label=self.cur_gal_name)
 
         annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
 
