@@ -37,19 +37,15 @@ class Timer:
     GALAXY_CONSTRUCTOR_DEFAULT_PARAMS = {
         "exponential": {
             "half_light_radius": 1,
-            "flux": 0
         },
         "gaussian": {
             "half_light_radius": 1,
-            "flux": 0
         },
         "devaucouleurs": {
             "half_light_radius": 1,
-            "flux": 0
         },
         "sersic": {
             "half_light_radius": 1,
-            "flux": 0,
             "n": 2.5
         }
     }
@@ -86,6 +82,11 @@ class Timer:
         "optical": {
             "lam": PSF_DEFAULT_CONFIG["lam"],
             "diam": PSF_DEFAULT_CONFIG["diam"]
+        },
+        "airy": {
+            "lam": PSF_DEFAULT_CONFIG["lam"],
+            "diam": PSF_DEFAULT_CONFIG["diam"],
+            "scale_unit": galsim.arcsec
         }
     }
 
@@ -214,6 +215,8 @@ class Timer:
         vs. the flux. 
         """
 
+        axis_is_none = not bool(axis)
+
         if axis is None:
             fig, axis = plt.subplots(1, 1)
 
@@ -221,15 +224,25 @@ class Timer:
         # should catch the exception and re-raise it with a helpful error message that tells
         # the user to run the time_init function first.
         try:
-            axis.set_title("Setup Time vs. Flux (Averaged over %d runs)" % self.init_times_repeated)
+            title = "Setup Time vs. Flux (Averaged over %d runs)" % self.init_times_repeated
+            axis.set_title(title)
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease run the time_init routine first.")
 
         axis.set(xlabel="Flux", ylabel=r"Setup Time ($\mu$s)")
 
-        axis.plot(self.flux_scale, np.array(self.init_times) * 10**6, label=self.cur_gal_name)
+        # Omit the first point 
+        # This is because the first point dominates the time taken
+        axis.plot(self.flux_scale[1:], np.array(self.init_times)[1:] * 10**6, label=self.cur_gal_name)
 
         logger.info("Done plotting init...")
+
+        # If the user specifies an axis, this means they want to manage the plotting themselves.
+        # We then do not want to call show() prematurely, because the user will be responsible for
+        # calling show when they've plotted everything they want to on the axes they want to.
+        if axis_is_none:
+            fig.canvas.set_window_title(title)
+            plt.show()
 
 
     def set_galaxy(self, gal : str, **kwargs):
@@ -341,9 +354,10 @@ class Timer:
         
         if show:
             for (ind, (img, imgdata)) in enumerate(self.rendered_images):
-                logger.info("Displaying image %d/%d\nGalaxy: %s, PSF: %s, Flux: %s" % (ind+1, len(self.rendered_images), imgdata["galaxy"], imgdata["psf"], str(imgdata["flux"])))
+                logger_text = "Image %d/%d\nGalaxy: %s, PSF: %s, Flux: %s" % (ind+1, len(self.rendered_images), imgdata["galaxy"], imgdata["psf"], str(imgdata["flux"]))
+                logger.info(logger_text)
+                plt.figure(logger_text)
                 plt.imshow(img.array, cmap="gray")
-
 
 
 
@@ -351,27 +365,40 @@ class Timer:
         """
         A plotting routine to draw the times taken to do photon shooting.
         """
+        
+        axis_is_none = not bool(axis)
 
         if axis is None:
-            fig, axis = plt.subplots(1, 1)
+            fig, axis = plt.subplots()
 
 
         # If this fails, this means that the user has not run the compute_phot_draw_times
         # routine. This catches the exception and raises another one suggesting that the
         # user do that first.
+
         try:
-            axis.set_title(self.cur_gal_name + " Profile Convolved with " + self.cur_psf_disp_name + " " + "\nTime (s) vs. Flux")
+            title = self.cur_gal_name + " Profile Convolved with " + self.cur_psf_disp_name + " " + "\nTime (s) vs. Flux"
+            axis.set_title(title) 
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease run the compute_phot_draw_times routine first.")
 
         axis.set(xlabel="Flux", ylabel="Time (s)")
 
-        axis.scatter(self.flux_scale, self.final_times, label=self.cur_gal_name)
+        axis.scatter(self.flux_scale[1:], self.final_times[1:], label=self.cur_gal_name)
         slope, intercept, r_value, p_value, stderr = stats.linregress(self.flux_scale, self.final_times)
-        axis.plot(self.flux_scale, intercept + slope * self.flux_scale, 'tab:orange', label=self.cur_gal_name)
+        axis.plot(self.flux_scale[1:], intercept + slope * self.flux_scale[1:], 'tab:orange', label=self.cur_gal_name)
 
         annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
-        axis.annotate(annotation, (5, 5))
+
+        top_right = (max(self.flux_scale) * 0.75, max(self.final_times) * 0.75)
+        axis.annotate(annotation, top_right)
+
+        # If the user specifies an axis, this means they want to manage the plotting themselves.
+        # We then do not want to call show() prematurely, because the user will be responsible for
+        # calling show when they've plotted everything they want to on the axes they want to.
+        if axis_is_none: 
+            fig.canvas.set_window_title(title)
+            plt.show()
 
     def __repr__(self):
         output = ("""
@@ -385,10 +412,5 @@ class Timer:
     def compute_all(self):
         pass
     
-    @staticmethod
-    def draw_all():
-        plt.legend()
-        plt.show()
-
-
+    
 
