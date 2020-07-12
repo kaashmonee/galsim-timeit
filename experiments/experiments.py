@@ -68,7 +68,60 @@ class Experiment:
 
 
     def time_phot_shooting_vs_gal_shape(self):
+        """
+        Experiment: Measure the time to do photon shooting while varying the galaxy
+        shape, as demonstrated in demo2.py and demo3.py in the GalSim repo.
+
+        Expected results: we do not expect differences between runs, since the 
+        galaxy shape should not have an effect on the time taken to do photon shooting
+
+        Procedure:
+            - Using an exponential galaxy profile
+            - Using a Kolmogorov PSF
+            - No randomness
+            - One repetition
+            - Varying the galaxy shear
+            - Plotting initialization time and convolution time vs. flux for each shear value
+        """
+        start, end = 1.e3, 1.e5
+
+        for shear in shears:
+            t = Timer("sersic", (start, end))
+            t.time_init()
+
+            mod_gal_objs = []
+            shape = galsim.Shear(q=q, beta=beta)
+
+            for gal in t.cur_gal_objs:
+                mod_gal_objs.append(gal.shear(gal_shape))
+
+            t.cur_gal_objs = mod_gal_objs
+
+            t.set_psf("kolmogorov")
+            t.compute_phot_draw_times()
+            t.plot_draw_times()
+
+
+
+    def time_phot_shooting_vs_profile(self):
+        """
+        Experiment: Measure the time to do photon shooting vs. flux while varying
+        the galaxy profile.
+
+        Expected results: we do not expect that the galaxy profile is a 
+        confounding factor in the time vs. flux measurements when performing
+        photon shooting.
+
+        Procedure:
+            - Vary galaxy profile
+            - Use Kolmogorov PSF
+            - No randomness
+            - One repetition
+            - Plot initialization time and convolution time for each flux value
+              for each galaxy.
+        """
         pass
+
 
 
     def run_experiments(self):
