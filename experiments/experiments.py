@@ -134,18 +134,33 @@ class Experiment:
             - Plot initialization time and convolution time for each flux value
               for each galaxy.
         """
-        pass
+        start, end = 1.e3, 1.e5
+
+        fig, axs = plt.subplots(1, 2)
+        init_axis = axs[0]
+        draw_axis = axs[1]
+        psf = "kolmogorov"
+
+        for gal_name in Timer.GALAXY_NAMES:
+            t = Timer(gal_name, (start, end))
+            t.time_init()
+            t.plot_init_times(axis=init_axis)
+
+            t.set_psf(psf)
+            t.compute_phot_draw_times()
+
+            t.plot_draw_times(axis=draw_axis)
+
+        plt.show()
 
 
-
-    def run_experiments(self):
-        self.plot_setup_times()
 
 
 
 def main():
     Experiment().time_phot_shooting_vs_gal_size()
     Experiment().time_phot_shooting_vs_gal_shape()
+    Experiment().time_phot_shooting_vs_profile()
 
 if __name__ == "__main__":
     main()
