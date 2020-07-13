@@ -8,9 +8,6 @@ class Experiment:
     This class will store all the experiments.
     """
 
-    def change_galaxy_shape(self):
-        pass            
-
     def plot_setup_times(self):
         start, end = 1.e3, 1.e5
 
@@ -65,6 +62,16 @@ class Experiment:
             t.plot_init_times(axis=init_ax)
             t.plot_draw_times(axis=draw_ax)
 
+        legend_labels = ["r = %f" % r for r in half_light_radii]
+
+        title0 = axs[0].get_title() + "\nVarying half_light_radius"
+        title1 = axs[1].get_title() + "\nVarying half_light_radius"
+        axs[0].set_title(title0)
+        axs[1].set_title(title1)
+
+        axs[0].legend(legend_labels)
+        axs[1].legend(legend_labels)
+
         plt.show()
 
 
@@ -77,7 +84,7 @@ class Experiment:
         galaxy shape should not have an effect on the time taken to do photon shooting
 
         Procedure:
-            - Using an exponential galaxy profile
+            - Using an Sersic galaxy profile
             - Using a Kolmogorov PSF
             - No randomness
             - One repetition
@@ -112,6 +119,17 @@ class Experiment:
             t.compute_phot_draw_times()
 
             t.plot_draw_times(axis=draw_axis)
+
+        legend_labels = ["q = %f" % q for q in gal_qs]
+
+        title0 = axs[0].get_title() + "\nVarying q value (shear)"
+        title1 = axs[1].get_title() + "\nVarying q value (shear)"
+
+        axs[0].set_title(title0)
+        axs[1].set_title(title1)
+
+        axs[0].legend(legend_labels)
+        axs[1].legend(legend_labels)
 
         plt.show()
 
@@ -151,16 +169,68 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
+        axs[0].set_title("Init Time for Different Galaxy Profiles")
+        axs[1].set_title("Time vs. Photon Shooting for Different Profiles Convolved with %s PSF" % psf)
+        axs[0].legend()
+        axs[1].legend()
+
+        plt.show()
+
+    
+    def time_phot_shooting_vs_psf(self):
+        """
+        Experiment: Measure the time to do photon shooting vs. flux while varying the PSF.
+
+        Expected results: We do not expect substantial differences between runs, since the PSF 
+        shouldn't drastically affect the runtime of the photon shooting routine.
+
+        Procedure:
+            - Use Sersic galaxy profile
+            - Vary PSF
+            - No randomness
+            - One repetition
+            - Plot instantiation time and convolution time for each flux value on different convolutions
+              with different PSFs.
+        """
+        start, end = 1.e3, 1.e5
+
+        fig, axs = plt.subplots(1, 2)
+
+        init_axis = axs[0]
+        draw_axis = axs[1]
+
+        galaxy = "sersic"
+
+        for psf in Timer.PSFS:
+            t = Timer(galaxy, (start, end))
+
+            t.time_init()
+            t.plot_init_times(axis=init_axis)
+
+            t.set_psf(psf)
+
+            t.compute_phot_draw_times()
+
+            t.plot_draw_times(axis=draw_axis)
+
+        legend_labels = [psf for psf in Timer.PSFS]
+        
+        title1 = "Time vs. Photon Shooting for Sersic Profile Convolved with Various PSFs"
+        axs[1].set_title(title1)
+
+        axs[0].legend(legend_labels)
+        axs[1].legend(legend_labels)
+
+
         plt.show()
 
 
-
-
-
 def main():
-    Experiment().time_phot_shooting_vs_gal_size()
-    Experiment().time_phot_shooting_vs_gal_shape()
-    Experiment().time_phot_shooting_vs_profile()
+    e = Experiment()
+    e.time_phot_shooting_vs_gal_size()
+    e.time_phot_shooting_vs_gal_shape()
+    e.time_phot_shooting_vs_profile()
+    e.time_phot_shooting_vs_psf()
 
 if __name__ == "__main__":
     main()
