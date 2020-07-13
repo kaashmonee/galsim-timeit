@@ -183,7 +183,6 @@ class Timer:
         # Copies the default galaxy arguments and updates it
         # in the loop
         temp_params = copy.deepcopy(self.default_gal_args)
-        print("temp_params:", temp_params)
 
         for i, gal_flux in enumerate(self.flux_scale):
             rand_offset = np.random.random_sample() / (1 / random_offset_range) if random_offset_range != 0 else 0
@@ -385,7 +384,7 @@ class Timer:
         axis.set(xlabel="Flux", ylabel="Time (s)")
 
         axis.scatter(self.flux_scale[1:], self.final_times[1:], label=self.cur_gal_name)
-        slope, intercept, r_value, p_value, stderr = stats.linregress(self.flux_scale, self.final_times)
+        slope, intercept, r_value, p_value, stderr = stats.linregress(self.flux_scale[1:], self.final_times[1:])
         axis.plot(self.flux_scale[1:], intercept + slope * self.flux_scale[1:], 'tab:orange', label=self.cur_gal_name)
 
         annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
