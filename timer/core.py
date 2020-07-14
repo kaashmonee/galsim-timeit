@@ -25,7 +25,7 @@ class Timer:
         "gaussian": "Gaussian",
         "devaucouleurs": "DeVaucouleurs",
         "sersic": "Sersic",
-        "delta": "Delta Function"
+        "point": "PointLightSource"
     }
 
     GALAXY_CONSTRUCTORS = {
@@ -33,7 +33,7 @@ class Timer:
         "gaussian": galsim.Gaussian,
         "devaucouleurs": galsim.DeVaucouleurs,
         "sersic": galsim.Sersic,
-        "delta": galsim.DeltaFunction
+        "point": galsim.DeltaFunction
     }
 
     GALAXY_CONSTRUCTOR_DEFAULT_PARAMS = {
@@ -50,7 +50,9 @@ class Timer:
             "half_light_radius": 1,
             "n": 2.5
         },
-        "delta": {}
+        "point": {
+            "flux": 1.0
+        }
     }
 
     DEFAULT_LAMBDA = 700
@@ -197,8 +199,11 @@ class Timer:
             # update the half_light_radius.
             if self.cur_gal_name == "Sersic":
                 temp_params["n"] += rand_offset
-            elif self.cur_gal_name == "Delta Function":
-                temp_params = {}
+            elif self.cur_gal_name == "PointLightSource":
+                # We just want to leave it as is and not modify anything
+                # since there is no half_light_radius parameter for a delta
+                # function
+                pass
             else:
                 temp_params["half_light_radius"] += rand_offset
 
