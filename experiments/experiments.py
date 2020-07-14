@@ -166,6 +166,8 @@ class Experiment:
 
             t.set_psf(psf)
             t.compute_phot_draw_times()
+            if gal_name == "point":
+                t.save_phot_shoot_images()
 
             t.plot_draw_times(axis=draw_axis)
 

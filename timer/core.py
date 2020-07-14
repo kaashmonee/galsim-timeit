@@ -24,14 +24,16 @@ class Timer:
         "exponential": "Exponential",
         "gaussian": "Gaussian",
         "devaucouleurs": "DeVaucouleurs",
-        "sersic": "Sersic"
+        "sersic": "Sersic",
+        "point": "PointLightSource"
     }
 
     GALAXY_CONSTRUCTORS = {
         "exponential": galsim.Exponential,
         "gaussian": galsim.Gaussian,
         "devaucouleurs": galsim.DeVaucouleurs,
-        "sersic": galsim.Sersic
+        "sersic": galsim.Sersic,
+        "point": galsim.DeltaFunction
     }
 
     GALAXY_CONSTRUCTOR_DEFAULT_PARAMS = {
@@ -47,6 +49,9 @@ class Timer:
         "sersic": {
             "half_light_radius": 1,
             "n": 2.5
+        },
+        "point": {
+            "flux": 1.0
         }
     }
 
@@ -81,7 +86,8 @@ class Timer:
         },
         "optical": {
             "lam": PSF_DEFAULT_CONFIG["lam"],
-            "diam": PSF_DEFAULT_CONFIG["diam"]
+            "diam": PSF_DEFAULT_CONFIG["diam"],
+            "scale_unit": galsim.arcsec
         },
         "airy": {
             "lam": PSF_DEFAULT_CONFIG["lam"],
@@ -193,6 +199,11 @@ class Timer:
             # update the half_light_radius.
             if self.cur_gal_name == "Sersic":
                 temp_params["n"] += rand_offset
+            elif self.cur_gal_name == "PointLightSource":
+                # We just want to leave it as is and not modify anything
+                # since there is no half_light_radius parameter for a delta
+                # function
+                pass
             else:
                 temp_params["half_light_radius"] += rand_offset
 
@@ -251,7 +262,7 @@ class Timer:
         of parameters initialized above.
         """
 
-        if gal in {"exponential", "gaussian", "devaucouleurs", "sersic"}:
+        if gal in Timer.GALAXY_NAMES:
             self.cur_gal_name = Timer.GALAXY_NAMES[gal]
             self.cur_gal_name_constructor = Timer.GALAXY_CONSTRUCTORS[gal]
 
@@ -385,7 +396,7 @@ class Timer:
 
         axis.scatter(self.flux_scale[1:], self.final_times[1:], label=self.cur_gal_name)
         slope, intercept, r_value, p_value, stderr = stats.linregress(self.flux_scale[1:], self.final_times[1:])
-        axis.plot(self.flux_scale[1:], intercept + slope * self.flux_scale[1:], 'tab:orange', label=self.cur_gal_name)
+        axis.plot(self.flux_scale[1:], intercept + slope * self.flux_scale[1:], label=self.cur_gal_name)
 
         annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
 
