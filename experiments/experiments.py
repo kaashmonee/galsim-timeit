@@ -227,12 +227,100 @@ class Experiment:
         plt.show()
 
 
+    def time_phot_shooting_vs_optical_psf_params(self):
+        """
+        Experiment: Measure the time to do photon shooting vs. flux by varying various parameters of the Optical PSF.
+
+        Expected results: not sure
+
+        Procedure:
+            - Use sersic galaxy profile
+            - Use Optical PSF
+            - Vary [what exactly?]
+            - One repetition
+            - Plot instantiation time and convolution time for each flux value on different convolutions with different
+              types of Optical PSFs
+        """
+
+        # Include defocus, astigmatism, coma, and trefoil
+
+        defocus = [0.0] * 12
+        defocus[4] = 0.06                         # Noll index 4 = defocus
+
+        astigmatism = [0.0] * 12
+        astigmatism[5:7] = [0.12, -0.08]          # Noll index 5, 6 = astigmatism
+
+        coma = [0.0] * 12
+        coma[7:9] = [0.07, 0.04]                  # Noll index 7, 8 = coma
+
+        spherical = [0.0] * 12
+        spherical[11] = -0.13                     # Noll index 11 = spherical
+
+
+        aberrations_list = [
+            [0.0] * 12,
+            defocus,
+            astigmatism,
+            coma,
+            spherical
+        ]
+
+        fig, axs = plt.subplots(1, 2)
+
+        start, end = 1.e3, 1.e5
+
+        init_axis = axs[0]
+        draw_axis = axs[1]
+
+        galaxy = "sersic"
+        psf = "optical"
+
+        for aberrations in aberrations_list:
+
+            params = {
+                "lam": Timer.DEFAULT_LAMBDA,
+                "diam": Timer.DEFAULT_DIAMETER,
+                "aberrations": aberrations
+            }
+
+            t = Timer(galaxy, (start, end))
+            t.time_init()
+
+            t.plot_init_times(axis=init_axis)
+
+            t.set_psf(psf, **params)
+
+            t.compute_phot_draw_times()
+
+            t.plot_draw_times(axis=draw_axis)
+
+
+        legend_labels = [
+            "none",
+            "defocus=%f" % defocus[4],
+            "astigmatism=%f,%f" % (astigmatism[5], astigmatism[6]),
+            "coma=%f,%f" % (coma[7], coma[8]),
+            "spherical=%f" % spherical[11]
+        ]
+
+        title1 = "Time for Photon Shooting vs. Flux with Sersic Profile Convolved with Optical PSF"
+
+        axs[1].set_title(title1)
+
+        axs[0].legend(legend_labels)
+        axs[1].legend(legend_labels)
+
+        plt.show()
+
+
+
 def main():
     e = Experiment()
-    e.time_phot_shooting_vs_gal_size()
-    e.time_phot_shooting_vs_gal_shape()
-    e.time_phot_shooting_vs_profile()
-    e.time_phot_shooting_vs_psf()
+    # e.time_phot_shooting_vs_gal_size()
+    # e.time_phot_shooting_vs_gal_shape()
+    # e.time_phot_shooting_vs_profile()
+    # e.time_phot_shooting_vs_psf()
+    e.time_phot_shooting_vs_optical_psf_params()
 
 if __name__ == "__main__":
     main()
