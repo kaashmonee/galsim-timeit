@@ -313,6 +313,67 @@ class Experiment:
         plt.show()
 
 
+    def time_phot_shooting_vs_optical_psf_vary_obscuration(self):
+        """
+        Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
+        parameter for the OpticalPSF.
+
+        Expected Results: Since the OpticalPSF does do a Fourier transform, we expect that the 
+        time taken should change if we double the lam_over_diam parameter since the image size
+        also changes.
+
+        Procedure:
+            - Use sersic galaxy profile
+            - Use Optical PSF
+            - Vary obscuration for obscuration values in [0, 0.25, 0.5, 0.75, 1]
+            - One repetition
+            - Plot instantiation time and convolution time for each flux value on different convolutions
+              for 2 different lam_over_diam parameters.
+        """
+
+        fig, axs = plt.subplots(1, 2)
+
+        start, end = 1.e3, 1.e5
+
+        init_axis = axs[0]
+        draw_axis = axs[1]
+
+        galaxy = "sersic"
+        psf = "optical"
+
+        obscurations = np.linspace(0, 0.5, 5)
+
+        for obscuration in obscurations:
+            params = {
+                "lam": Timer.DEFAULT_LAMBDA,
+                "diam": Timer.DEFAULT_DIAMETER,
+                "obscuration": obscuration
+            }
+
+            t = Timer(galaxy, (start, end))
+            t.time_init()
+
+            t.plot_init_times(axis=init_axis)
+
+            t.set_psf(psf, **params)
+
+            t.compute_phot_draw_times()
+
+            t.plot_draw_times(axis=draw_axis)
+
+
+        title0 = init_axis.get_title() + "\nVarying obscuration parameter in OpticalPSF"
+        title1 = draw_axis.get_title() + "\nVarying obscuration parameter in OpticalPSF"
+
+        legend_labels = ["obscuration = %f" % o for o in obscurations]
+
+        init_axis.legend(legend_labels)
+        draw_axis.legend(legend_labels)
+
+        plt.show()
+
+
+
 
 def main():
     e = Experiment()
@@ -320,7 +381,8 @@ def main():
     # e.time_phot_shooting_vs_gal_shape()
     # e.time_phot_shooting_vs_profile()
     # e.time_phot_shooting_vs_psf()
-    e.time_phot_shooting_vs_optical_psf_params()
+    # e.time_phot_shooting_vs_optical_psf_params()
+    e.time_phot_shooting_vs_optical_psf_vary_obscuration()
 
 if __name__ == "__main__":
     main()
