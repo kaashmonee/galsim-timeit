@@ -373,6 +373,67 @@ class Experiment:
         plt.show()
 
 
+    def time_phot_shooting_vs_optical_psf_vary_lam_over_diam(self):
+        """
+        Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
+        parameter for the OpticalPSF.
+
+        Expected Results: Since the OpticalPSF does do a Fourier transform, we expect that the 
+        time taken should change if we double the lam_over_diam parameter since the image size
+        also changes.
+
+        Procedure:
+            - Use sersic galaxy profile
+            - Use Optical PSF
+            - One repetition
+            - Plot instantiation time and convolution time for each flux value on different convolutions
+              for 2 different lam_over_diam parameters.
+        """                
+        fig, axs = plt.subplots(1, 2)
+
+        start, end = 1.e3, 1.e5
+
+        init_axis = axs[0]
+        draw_axis = axs[1]
+
+        galaxy = "sersic"
+        psf = "optical"
+
+        # Obtained from GalSim documentation:
+        # http://galsim-developers.github.io/GalSim/_build/html/psf.html#optical-psf
+        lod = ((Timer.DEFAULT_DIAMETER * 1.e-9) / Timer.DEFAULT_DIAMETER) * 206265
+
+        lam_over_diams = np.linspace(0.1, 5., 5) * lod
+
+        for lam_over_diam in lam_over_diams:
+            params = {
+                "lam_over_diam": lam_over_diam
+            }
+
+            t = Timer(galaxy, (start, end))
+            t.time_init()
+
+            t.plot_init_times(axis=init_axis)
+
+            t.set_psf(psf, **params)
+
+            t.compute_phot_draw_times()
+
+            t.plot_draw_times(axis=draw_axis)
+
+
+        title0 = init_axis.get_title() + "\nVarying lam_over_diam in OpticalPSF"
+        title1 = draw_axis.get_title() + "\nVarying lam_over_diam in OpticalPSF"
+
+        legend_labels = ["lam_over_diam = %f" % lod for lod in lam_over_diams]
+
+        init_axis.legend(legend_labels)
+        draw_axis.legend(legend_labels)
+
+        plt.show()
+
+
+
 
 
 def main():
@@ -382,7 +443,8 @@ def main():
     # e.time_phot_shooting_vs_profile()
     # e.time_phot_shooting_vs_psf()
     # e.time_phot_shooting_vs_optical_psf_params()
-    e.time_phot_shooting_vs_optical_psf_vary_obscuration()
+    # e.time_phot_shooting_vs_optical_psf_vary_obscuration()
+    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
 
 if __name__ == "__main__":
     main()
