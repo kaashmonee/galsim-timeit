@@ -307,6 +307,8 @@ class Timer:
         else:
             raise ValueError("Please choose a valid PSF name.")
 
+
+
     def compute_phot_draw_times(self, drawImage_kwargs:dict=None):
         """
         Takes in a PSF and its parameters. If the **kwargs is left blank,
@@ -342,12 +344,16 @@ class Timer:
 
             img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng, **drawImage_kwargs)
 
+            # Obtaining the size of the image that GalSim is drawing.
+            image_size = self.kimage_size(convolved_img_final, drawImage_kwargs["scale"])
+
             img_metadata = {
                 "galaxy": self.cur_gal_name,
                 "psf": self.cur_psf_name,
                 "flux": self.flux_scale[gal_ind],
                 "method": "photon_shooting",
-                "pixel_scale": drawImage_kwargs["scale"]
+                "pixel_scale": drawImage_kwargs["scale"],
+                "image_size": image_size,
             }
             self.rendered_images.append((img, img_metadata))
             self.final_times.append(draw_img_time)
@@ -431,6 +437,40 @@ class Timer:
         if axis_is_none: 
             fig.canvas.set_window_title(title)
             plt.show()
+
+
+    def kimage_size(self, obj, scale):
+        """
+        Inputs: (obj : galsim.GSObject, scale : float)
+        Outputs: The size of the image drawn that would be drawn
+        by the obj.drawImage routine given a pixel scale `scale`.
+        This helper routine was written by Prof. Rachel Mandelbaum at 
+        Carnegie Mellon University (@rmandelb).
+        """
+
+        # Figure out how large of an image would GalSim like to draw for this object, for a given
+        # scale.  (But don't actually take the time to draw it.)
+        test_im = obj.drawImage(scale=scale, setup_only=True)
+        # Start with what this profile thinks a good size would be given the image's pixel scale.
+        N = obj.getGoodImageSize(scale)
+        # We must make something big enough to cover the target image size:
+        image_N = max(np.max(np.abs((test_im.bounds._getinitargs()))) * 2,
+                    np.max(test_im.bounds.numpyShape()))    
+        N = max(N, image_N)
+        # Round up to a good size for making FFTs:
+        N = test_im.good_fft_size(N)
+        # Make sure we hit the minimum size specified in the gsparams.
+        N = max(N, obj.gsparams.minimum_fft_size)
+        dk = 2.*np.pi / (N*scale)
+        maxk = obj.maxk
+        if N*dk/2 > maxk:
+            Nk = N
+        else:
+            # Avoid aliasing by making a larger image
+            Nk = int(np.ceil(maxk/dk)) * 2
+        return Nk
+
+
 
     def __repr__(self):
         output = ("""
