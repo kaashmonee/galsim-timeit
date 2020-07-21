@@ -227,12 +227,226 @@ class Experiment:
         plt.show()
 
 
+    def time_phot_shooting_vs_optical_psf_params(self):
+        """
+        Experiment: Measure the time to do photon shooting vs. flux by varying various parameters of the Optical PSF.
+
+        Expected results: Not sure
+
+        Procedure:
+            - Use sersic galaxy profile
+            - Use Optical PSF
+            - Vary parameters using the Noll index to include different optical aberrations.
+            - One repetition
+            - Plot instantiation time and convolution time for each flux value on different convolutions with different
+              types of Optical PSFs
+
+        Results: No dependence on aberration
+        """
+
+        # Include defocus, astigmatism, coma, and trefoil
+
+        defocus = [0.0] * 12
+        defocus[4] = 0.06                         # Noll index 4 = defocus
+
+        astigmatism = [0.0] * 12
+        astigmatism[5:7] = [0.12, -0.08]          # Noll index 5, 6 = astigmatism
+
+        coma = [0.0] * 12
+        coma[7:9] = [0.07, 0.04]                  # Noll index 7, 8 = coma
+
+        spherical = [0.0] * 12
+        spherical[11] = -0.13                     # Noll index 11 = spherical
+
+
+        aberrations_list = [
+            [0.0] * 12,
+            defocus,
+            astigmatism,
+            coma,
+            spherical
+        ]
+
+        fig, axs = plt.subplots(1, 2)
+
+        start, end = 1.e3, 1.e5
+
+        init_axis = axs[0]
+        draw_axis = axs[1]
+
+        galaxy = "sersic"
+        psf = "optical"
+
+        for aberrations in aberrations_list:
+
+            params = {
+                "lam": Timer.DEFAULT_LAMBDA,
+                "diam": Timer.DEFAULT_DIAMETER,
+                "aberrations": aberrations
+            }
+
+            t = Timer(galaxy, (start, end))
+            t.time_init()
+
+            t.plot_init_times(axis=init_axis)
+
+            t.set_psf(psf, **params)
+
+            t.compute_phot_draw_times()
+
+            t.plot_draw_times(axis=draw_axis)
+
+
+        legend_labels = [
+            "none",
+            "defocus=%f" % defocus[4],
+            "astigmatism=%f,%f" % (astigmatism[5], astigmatism[6]),
+            "coma=%f,%f" % (coma[7], coma[8]),
+            "spherical=%f" % spherical[11]
+        ]
+
+        title1 = "Time for Photon Shooting vs. Flux with Sersic Profile Convolved with Optical PSF"
+
+        axs[1].set_title(title1)
+
+        axs[0].legend(legend_labels)
+        axs[1].legend(legend_labels)
+
+        plt.show()
+
+
+    def time_phot_shooting_vs_optical_psf_vary_obscuration(self):
+        """
+        Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
+        parameter for the OpticalPSF.
+
+        Expected Results: Since the OpticalPSF does do a Fourier transform, we expect that the 
+        time taken should change if we double the lam_over_diam parameter since the image size
+        also changes.
+
+        Procedure:
+            - Use sersic galaxy profile
+            - Use Optical PSF
+            - Vary obscuration for obscuration values in [0, 0.25, 0.5, 0.75, 1]
+            - One repetition
+            - Plot instantiation time and convolution time for each flux value on different convolutions
+              for 2 different lam_over_diam parameters.
+        """
+
+        fig, axs = plt.subplots(1, 2)
+
+        start, end = 1.e3, 1.e5
+
+        init_axis = axs[0]
+        draw_axis = axs[1]
+
+        galaxy = "sersic"
+        psf = "optical"
+
+        obscurations = np.linspace(0, 0.5, 5)
+
+        for obscuration in obscurations:
+            params = {
+                "lam": Timer.DEFAULT_LAMBDA,
+                "diam": Timer.DEFAULT_DIAMETER,
+                "obscuration": obscuration
+            }
+
+            t = Timer(galaxy, (start, end))
+            t.time_init()
+
+            t.plot_init_times(axis=init_axis)
+
+            t.set_psf(psf, **params)
+
+            t.compute_phot_draw_times()
+
+            t.plot_draw_times(axis=draw_axis)
+
+
+        title0 = init_axis.get_title() + "\nVarying obscuration parameter in OpticalPSF"
+        title1 = draw_axis.get_title() + "\nVarying obscuration parameter in OpticalPSF"
+
+        legend_labels = ["obscuration = %f" % o for o in obscurations]
+
+        init_axis.legend(legend_labels)
+        draw_axis.legend(legend_labels)
+
+        plt.show()
+
+
+    def time_phot_shooting_vs_optical_psf_vary_lam_over_diam(self):
+        """
+        Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
+        parameter for the OpticalPSF.
+
+        Expected Results: Since the OpticalPSF does do a Fourier transform, we expect that the 
+        time taken should change if we double the lam_over_diam parameter since the image size
+        also changes.
+
+        Procedure:
+            - Use sersic galaxy profile
+            - Use Optical PSF
+            - One repetition
+            - Plot instantiation time and convolution time for each flux value on different convolutions
+              for 2 different lam_over_diam parameters.
+        """                
+        fig, axs = plt.subplots(1, 2)
+
+        start, end = 1.e3, 1.e5
+
+        init_axis = axs[0]
+        draw_axis = axs[1]
+
+        galaxy = "sersic"
+        psf = "optical"
+
+        # Obtained from GalSim documentation:
+        # http://galsim-developers.github.io/GalSim/_build/html/psf.html#optical-psf
+        lod = ((Timer.DEFAULT_DIAMETER * 1.e-9) / Timer.DEFAULT_DIAMETER) * 206265
+
+        lam_over_diams = np.linspace(0.1, 5., 5) * lod
+
+        for lam_over_diam in lam_over_diams:
+            params = {
+                "lam_over_diam": lam_over_diam
+            }
+
+            t = Timer(galaxy, (start, end))
+            t.time_init()
+
+            t.plot_init_times(axis=init_axis)
+
+            t.set_psf(psf, **params)
+
+            t.compute_phot_draw_times()
+
+            t.plot_draw_times(axis=draw_axis)
+
+
+        title0 = init_axis.get_title() + "\nVarying lam_over_diam in OpticalPSF"
+        title1 = draw_axis.get_title() + "\nVarying lam_over_diam in OpticalPSF"
+
+        legend_labels = ["lam_over_diam = %f" % lod for lod in lam_over_diams]
+
+        init_axis.legend(legend_labels)
+        draw_axis.legend(legend_labels)
+
+        plt.show()
+
+
+
+
+
 def main():
     e = Experiment()
-    e.time_phot_shooting_vs_gal_size()
-    e.time_phot_shooting_vs_gal_shape()
-    e.time_phot_shooting_vs_profile()
-    e.time_phot_shooting_vs_psf()
+    # e.time_phot_shooting_vs_gal_size()
+    # e.time_phot_shooting_vs_gal_shape()
+    # e.time_phot_shooting_vs_profile()
+    # e.time_phot_shooting_vs_psf()
+    # e.time_phot_shooting_vs_optical_psf_params()
+    # e.time_phot_shooting_vs_optical_psf_vary_obscuration()
+    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
 
 if __name__ == "__main__":
     main()
