@@ -231,15 +231,17 @@ class Experiment:
         """
         Experiment: Measure the time to do photon shooting vs. flux by varying various parameters of the Optical PSF.
 
-        Expected results: not sure
+        Expected results: Not sure
 
         Procedure:
             - Use sersic galaxy profile
             - Use Optical PSF
-            - Vary [what exactly?]
+            - Vary parameters using the Noll index to include different optical aberrations.
             - One repetition
             - Plot instantiation time and convolution time for each flux value on different convolutions with different
               types of Optical PSFs
+
+        Results: No dependence on aberration
         """
 
         # Include defocus, astigmatism, coma, and trefoil
