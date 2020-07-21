@@ -403,6 +403,7 @@ class Experiment:
 
         # Obtained from GalSim documentation:
         # http://galsim-developers.github.io/GalSim/_build/html/psf.html#optical-psf
+        # Last multiplication operation converts to arcseconds.
         lod = ((Timer.DEFAULT_DIAMETER * 1.e-9) / Timer.DEFAULT_DIAMETER) * 206265
 
         lam_over_diams = np.linspace(0.1, 5., 5) * lod
@@ -427,7 +428,7 @@ class Experiment:
         title0 = init_axis.get_title() + "\nVarying lam_over_diam in OpticalPSF"
         title1 = draw_axis.get_title() + "\nVarying lam_over_diam in OpticalPSF"
 
-        legend_labels = ["lam_over_diam = %f" % lod for lod in lam_over_diams]
+        legend_labels = ["lam_over_diam = %f arcsecs" % lod for lod in lam_over_diams]
 
         init_axis.legend(legend_labels)
         draw_axis.legend(legend_labels)
