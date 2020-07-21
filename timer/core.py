@@ -36,6 +36,10 @@ class Timer:
         "point": galsim.DeltaFunction
     }
 
+    DRAWIMAGE_DEFAULT_PARAMS = {
+        "scale": 0.2
+    }
+
     GALAXY_CONSTRUCTOR_DEFAULT_PARAMS = {
         "exponential": {
             "half_light_radius": 1,
@@ -48,10 +52,10 @@ class Timer:
         },
         "sersic": {
             "half_light_radius": 1,
-            "n": 2.5
+            "n": 2.5,
         },
         "point": {
-            "flux": 1.0
+            "flux": 1.0,
         }
     }
 
@@ -303,7 +307,9 @@ class Timer:
         else:
             raise ValueError("Please choose a valid PSF name.")
 
-    def compute_phot_draw_times(self, **kwargs):
+
+
+    def compute_phot_draw_times(self, drawImage_kwargs:dict=None):
         """
         Takes in a PSF and its parameters. If the **kwargs is left blank,
         it uses a default set of parameters already defined. 
@@ -317,21 +323,47 @@ class Timer:
         if self.debug:
             logger.info("NOTE: running in debug mode.")
 
+        # Check to see if the user has provided a dictionary 
+        # of kwargs they would like to use for the drawImage routine.
+        # We use an explicit dictionary as opposed to a **kwargs so
+        # that it's clear that the arguments provided in the dictionary
+        # are explicitly keyword arguments for the GalSim drawImage routine.
+        if not drawImage_kwargs:
+            drawImage_kwargs = Timer.DRAWIMAGE_DEFAULT_PARAMS
+
+
+        # Output the pixel scale that this is being drawn at.
+        # Doing this outside the for loop since the for loop draws convolves galaxies instantiated at 
+        # different flux levels with a specific PSF. But we are attempting to ensure here that 
+        # GalSim uses the same pixel scale for each galaxy, regardless of the flux that it's 
+        # been instantiated at.
+        logger.info("Drawn at pixel scale: %f" % drawImage_kwargs["scale"])
+
+        # Ensure that the time_init routine is run first.
+        if len(self.cur_gal_objs) == 0:
+            raise RuntimeError("Please run the time_init routine first before attempting to run this one.")
+
         for gal_ind, gal in enumerate(self.cur_gal_objs):
             convolved_img_final = galsim.Convolve([gal, self.cur_psf_obj])
 
-            img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng, **kwargs)
+            img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng, **drawImage_kwargs)
+
+            # Obtaining the size of the image that GalSim is drawing.
+            image_size = self.kimage_size(convolved_img_final, drawImage_kwargs["scale"])
 
             img_metadata = {
                 "galaxy": self.cur_gal_name,
                 "psf": self.cur_psf_name,
                 "flux": self.flux_scale[gal_ind],
-                "method": "photon_shooting"
+                "method": "photon_shooting",
+                "pixel_scale": drawImage_kwargs["scale"],
+                "image_size": image_size,
             }
             self.rendered_images.append((img, img_metadata))
             self.final_times.append(draw_img_time)
 
             logger.info("Drawing %d/%d" % (gal_ind+1, self.cur_num_intervals))
+
 
 
     def save_phot_shoot_images(self, directory="", save=True, show=False):
@@ -409,6 +441,40 @@ class Timer:
         if axis_is_none: 
             fig.canvas.set_window_title(title)
             plt.show()
+
+
+    def kimage_size(self, obj, scale):
+        """
+        Inputs: (obj : galsim.GSObject, scale : float)
+        Outputs: The size of the image drawn that would be drawn
+        by the obj.drawImage routine given a pixel scale `scale`.
+        This helper routine was written by Prof. Rachel Mandelbaum at 
+        Carnegie Mellon University (@rmandelb).
+        """
+
+        # Figure out how large of an image would GalSim like to draw for this object, for a given
+        # scale.  (But don't actually take the time to draw it.)
+        test_im = obj.drawImage(scale=scale, setup_only=True)
+        # Start with what this profile thinks a good size would be given the image's pixel scale.
+        N = obj.getGoodImageSize(scale)
+        # We must make something big enough to cover the target image size:
+        image_N = max(np.max(np.abs((test_im.bounds._getinitargs()))) * 2,
+                    np.max(test_im.bounds.numpyShape()))    
+        N = max(N, image_N)
+        # Round up to a good size for making FFTs:
+        N = test_im.good_fft_size(N)
+        # Make sure we hit the minimum size specified in the gsparams.
+        N = max(N, obj.gsparams.minimum_fft_size)
+        dk = 2.*np.pi / (N*scale)
+        maxk = obj.maxk
+        if N*dk/2 > maxk:
+            Nk = N
+        else:
+            # Avoid aliasing by making a larger image
+            Nk = int(np.ceil(maxk/dk)) * 2
+        return Nk
+
+
 
     def __repr__(self):
         output = ("""

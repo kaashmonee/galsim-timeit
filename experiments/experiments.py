@@ -2,6 +2,7 @@ from timer import Timer
 import matplotlib.pyplot as plt
 import numpy as np
 import galsim
+from scipy import stats
 
 class Experiment:
     """
@@ -436,6 +437,67 @@ class Experiment:
         plt.show()
 
 
+    def fft_image_size_vs_flux_vary_lam_over_diam(self):
+        """
+        Experiment: Determine relationship of lam_over_diam parameter to image size.
+
+        Expected Results: On various runs with different lam_over_diam parameters, we expect
+        a linear relationship between the lam_over_diam parameter to the size of the image computing
+        an FFT. 
+
+        Procedure: 
+            - Choose a Sersic galaxy profile.
+            - Choose an OpticalPSF profile. (This is because the OpticalPSF routine does an underlying FFT)
+              Please see the first paragraph in Rowe et al., 2015 (https://arxiv.org/pdf/1407.7676.pdf) page 6 
+              for more information.
+            - One repetition.
+            - Perform photon shooting using the compute_phot_draw_times() routine without any parameters on a Timer object.
+            - Plot image size vs. flux.
+        """
+
+        fig, ax = plt.subplots()
+
+        galaxy = "sersic"
+        psf = "optical"
+
+        start, end = 1.e3, 1.e5
+
+        # Obtained from GalSim documentation:
+        # http://galsim-developers.github.io/GalSim/_build/html/psf.html#optical-psf
+        # Last multiplication operation converts to arcseconds.
+        lod = ((Timer.DEFAULT_DIAMETER * 1.e-9) / Timer.DEFAULT_DIAMETER) * 206265
+
+        lam_over_diams = np.linspace(0.1, 5., 5) * lod
+        image_sizes = []
+
+        # Setting up plotting...
+        title = "Image Size vs. Flux Response on lam_over_diam Parameter with \nSersic Galaxy Profile Convolved with Optical PSF"
+        ax.set_title(title)
+        ax.set_xlabel("Flux")
+        ax.set_ylabel("Image Sizes")
+
+        for lam_over_diam in lam_over_diams:
+            params = {
+                "lam_over_diam": lam_over_diam
+            }
+
+            t = Timer(galaxy, (start, end))
+            t.time_init()
+
+            t.set_psf(psf, **params)
+
+            t.compute_phot_draw_times()
+
+            img_sizes = [img_dat["image_size"] for (img, img_dat) in t.rendered_images]
+            
+            # Plotting
+            ax.plot(t.flux_scale, img_sizes)
+
+        legend_labels = ["lam_over_diam = %f arcseconds" % lod for lod in lam_over_diams]
+        ax.legend(legend_labels)
+
+        plt.show()
+
 
 
 
@@ -447,7 +509,8 @@ def main():
     # e.time_phot_shooting_vs_psf()
     # e.time_phot_shooting_vs_optical_psf_params()
     # e.time_phot_shooting_vs_optical_psf_vary_obscuration()
-    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
+    # e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
+    e.fft_image_size_vs_flux_vary_lam_over_diam()
 
 if __name__ == "__main__":
     main()
