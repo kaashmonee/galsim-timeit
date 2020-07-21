@@ -36,6 +36,10 @@ class Timer:
         "point": galsim.DeltaFunction
     }
 
+    DRAWIMAGE_DEFAULT_PARAMS = {
+        "scale": 0.2
+    }
+
     GALAXY_CONSTRUCTOR_DEFAULT_PARAMS = {
         "exponential": {
             "half_light_radius": 1,
@@ -48,10 +52,10 @@ class Timer:
         },
         "sersic": {
             "half_light_radius": 1,
-            "n": 2.5
+            "n": 2.5,
         },
         "point": {
-            "flux": 1.0
+            "flux": 1.0,
         }
     }
 
@@ -303,7 +307,7 @@ class Timer:
         else:
             raise ValueError("Please choose a valid PSF name.")
 
-    def compute_phot_draw_times(self, **kwargs):
+    def compute_phot_draw_times(self, drawImage_kwargs:dict=None):
         """
         Takes in a PSF and its parameters. If the **kwargs is left blank,
         it uses a default set of parameters already defined. 
@@ -317,21 +321,39 @@ class Timer:
         if self.debug:
             logger.info("NOTE: running in debug mode.")
 
+        # Check to see if the user has provided a dictionary 
+        # of kwargs they would like to use for the drawImage routine.
+        # We use an explicit dictionary as opposed to a **kwargs so
+        # that it's clear that the arguments provided in the dictionary
+        # are explicitly keyword arguments for the GalSim drawImage routine.
+        if not drawImage_kwargs:
+            drawImage_kwargs = Timer.DRAWIMAGE_DEFAULT_PARAMS
+
+
+        # Output the pixel scale that this is being drawn at.
+        # Doing this outside the for loop since the for loop draws convolves galaxies instantiated at 
+        # different flux levels with a specific PSF. But we are attempting to ensure here that 
+        # GalSim uses the same pixel scale for each galaxy, regardless of the flux that it's 
+        # been instantiated at.
+        logger.info("Drawn at pixel scale: %f" % drawImage_kwargs["scale"])
+
         for gal_ind, gal in enumerate(self.cur_gal_objs):
             convolved_img_final = galsim.Convolve([gal, self.cur_psf_obj])
 
-            img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng, **kwargs)
+            img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng, **drawImage_kwargs)
 
             img_metadata = {
                 "galaxy": self.cur_gal_name,
                 "psf": self.cur_psf_name,
                 "flux": self.flux_scale[gal_ind],
-                "method": "photon_shooting"
+                "method": "photon_shooting",
+                "pixel_scale": drawImage_kwargs["scale"]
             }
             self.rendered_images.append((img, img_metadata))
             self.final_times.append(draw_img_time)
 
             logger.info("Drawing %d/%d" % (gal_ind+1, self.cur_num_intervals))
+
 
 
     def save_phot_shoot_images(self, directory="", save=True, show=False):
