@@ -339,6 +339,10 @@ class Timer:
         # been instantiated at.
         logger.info("Drawn at pixel scale: %f" % drawImage_kwargs["scale"])
 
+        # Ensure that the time_init routine is run first.
+        if len(self.cur_gal_objs) == 0:
+            raise RuntimeError("Please run the time_init routine first before attempting to run this one.")
+
         for gal_ind, gal in enumerate(self.cur_gal_objs):
             convolved_img_final = galsim.Convolve([gal, self.cur_psf_obj])
 
