@@ -480,19 +480,38 @@ class Experiment:
 
         plt.show()
 
+    def get_PSF_FWHM(self):
+        """
+        This function just outputs the FWHM values for each PSF.
+        Instantiates a dummy galaxy with a dummy start and end 
+        simply for the purposes of obtaining a FWHM value.
+        """
+
+        # These values do not matter!
+        s, e = 1, 2   
+        galaxy = "sersic"
+        for psf in Timer.PSFS:
+
+            t = Timer(galaxy, (s, e))
+            t.time_init()
+
+            t.set_psf(psf)
+
+            print("%s fwhm (arcseconds): %f" % (psf, t.cur_psf_obj.calculateFWHM()))
 
 
 
 def main():
     e = Experiment()
-    # e.time_phot_shooting_vs_gal_size()
-    # e.time_phot_shooting_vs_gal_shape()
-    # e.time_phot_shooting_vs_profile()
-    # e.time_phot_shooting_vs_psf()
-    # e.time_phot_shooting_vs_optical_psf_params()
-    # e.time_phot_shooting_vs_optical_psf_vary_obscuration()
-    # e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
+    e.time_phot_shooting_vs_gal_size()
+    e.time_phot_shooting_vs_gal_shape()
+    e.time_phot_shooting_vs_profile()
+    e.time_phot_shooting_vs_psf()
+    e.time_phot_shooting_vs_optical_psf_params()
+    e.time_phot_shooting_vs_optical_psf_vary_obscuration()
+    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
     e.fft_image_size_vs_flux_vary_lam_over_diam()
+    e.get_PSF_FWHM()
 
 if __name__ == "__main__":
     main()
