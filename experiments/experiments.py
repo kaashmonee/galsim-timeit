@@ -492,13 +492,12 @@ class Experiment:
         galaxy = "sersic"
         for psf in Timer.PSFS:
 
-            if psf != "vonkarman" and psf != "optical":
-                t = Timer(galaxy, (s, e))
-                t.time_init()
+            t = Timer(galaxy, (s, e))
+            t.time_init()
 
-                t.set_psf(psf)
+            t.set_psf(psf)
 
-                print("%s fwhm (arcseconds): %f" % (psf, t.cur_psf_obj.fwhm))
+            print("%s fwhm (arcseconds): %f" % (psf, t.cur_psf_obj.calculateFWHM()))
 
 
 
