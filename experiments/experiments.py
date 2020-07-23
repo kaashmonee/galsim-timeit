@@ -387,7 +387,7 @@ class Experiment:
         # Obtained from GalSim documentation:
         # http://galsim-developers.github.io/GalSim/_build/html/psf.html#optical-psf
         # Last multiplication operation converts to arcseconds.
-        lod = ((Timer.DEFAULT_DIAMETER * 1.e-9) / Timer.DEFAULT_DIAMETER) * 206265
+        lod = ((Timer.DEFAULT_LAMBDA * 1.e-9) / Timer.DEFAULT_DIAMETER) * 206265
 
         lam_over_diams = np.linspace(0.1, 5., 5) * lod
 
@@ -437,7 +437,7 @@ class Experiment:
             - Plot image size vs. flux.
         """
 
-        fig, ax = plt.subplots()
+        fig, [ax, ax2] = plt.subplots(1, 2)
 
         galaxy = "sersic"
         psf = "optical"
@@ -447,18 +447,29 @@ class Experiment:
         # Obtained from GalSim documentation:
         # http://galsim-developers.github.io/GalSim/_build/html/psf.html#optical-psf
         # Last multiplication operation converts to arcseconds.
-        lod = ((Timer.DEFAULT_DIAMETER * 1.e-9) / Timer.DEFAULT_DIAMETER) * 206265
+        lod = ((Timer.DEFAULT_LAMBDA * 1.e-9) / Timer.DEFAULT_DIAMETER) * 206265 
 
-        lam_over_diams = np.linspace(0.1, 5., 5) * lod
+        resolution = 5
+        start_scale = 0.1
+        end_scale = 5.0
+
+        lam_over_diams = np.linspace(start_scale, end_scale, resolution) * lod
         image_sizes = []
 
         # Setting up plotting...
-        title = "Image Size vs. Flux Response on lam_over_diam Parameter with \nSersic Galaxy Profile Convolved with Optical PSF"
+        title = "Image Size vs. lam_over_diam Parameter with \nSersic Galaxy Profile Convolved with Optical PSF"
         ax.set_title(title)
-        ax.set_xlabel("Flux")
+        ax.set_xlabel("lambda/diam (arcseconds)")
         ax.set_ylabel("Image Sizes")
 
-        for lam_over_diam in lam_over_diams:
+        ax2.set_title("Image Size vs. Flux Response on lam_over_diam\nSersic Galaxy Convolved with Optical PSF")
+        ax2.set_xlabel("Flux")
+        ax2.set_ylabel("Image Sizes")
+
+        avg_img_sizes = []
+        img_size_std_devs = []
+
+        for ctr, lam_over_diam in enumerate(lam_over_diams):
             params = {
                 "lam_over_diam": lam_over_diam
             }
@@ -470,15 +481,27 @@ class Experiment:
 
             t.compute_phot_draw_times()
 
-            img_sizes = [img_dat["image_size"] for (img, img_dat) in t.rendered_images]
-            
-            # Plotting
-            ax.plot(t.flux_scale, img_sizes)
+            img_sizes = [img[1]["image_size"] for img in t.rendered_images]
 
-        legend_labels = ["lam_over_diam = %f arcseconds" % lod for lod in lam_over_diams]
-        ax.legend(legend_labels)
+            ax2.plot(t.flux_scale, img_sizes)
+
+            avg_img_size = np.mean(img_sizes)
+            img_size_std_dev = np.std(img_sizes)
+
+            avg_img_sizes.append(avg_img_size)
+            img_size_std_devs.append(img_size_std_dev)
+
+            print("%d/%d" % (ctr+1, len(lam_over_diams)))
+            
+
+        # Plotting
+        ax.errorbar(lam_over_diams, avg_img_sizes, fmt="o")
+        ax2_legend_labels = [("lam/diam = %f arcseconds" % lod) for lod in lam_over_diams]
+        ax2.legend(ax2_legend_labels)
 
         plt.show()
+
+
 
     def get_PSF_FWHM(self):
         """
@@ -503,13 +526,13 @@ class Experiment:
 
 def main():
     e = Experiment()
-    e.time_phot_shooting_vs_gal_size()
-    e.time_phot_shooting_vs_gal_shape()
-    e.time_phot_shooting_vs_profile()
-    e.time_phot_shooting_vs_psf()
-    e.time_phot_shooting_vs_optical_psf_params()
-    e.time_phot_shooting_vs_optical_psf_vary_obscuration()
-    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
+    # e.time_phot_shooting_vs_gal_size()
+    # e.time_phot_shooting_vs_gal_shape()
+    # e.time_phot_shooting_vs_profile()
+    # e.time_phot_shooting_vs_psf()
+    # e.time_phot_shooting_vs_optical_psf_params()
+    # e.time_phot_shooting_vs_optical_psf_vary_obscuration()
+    # e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
     e.fft_image_size_vs_flux_vary_lam_over_diam()
     e.get_PSF_FWHM()
 
