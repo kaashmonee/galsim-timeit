@@ -37,7 +37,30 @@ class Timer:
     }
 
     DRAWIMAGE_DEFAULT_PARAMS = {
-        "scale": 0.2
+        "galaxies": {
+            "exponential": {},
+            "gaussian": {},
+            "devaucouleurs": {},
+            "sersic": {},
+            "point": {},
+        },
+        "psfs": {
+            "airy": {
+                "scale": 0.03,
+            },
+            "optical": {
+                "scale": 0.03,
+            },
+            "kolmogorov": {
+                "scale": 0.2,
+            },
+            "moffat": {
+                "scale": 0.2,
+            },
+            "vonkarman": {
+                "scale": 0.2,
+            },
+        },
     }
 
     GALAXY_CONSTRUCTOR_DEFAULT_PARAMS = {
@@ -329,7 +352,7 @@ class Timer:
         # that it's clear that the arguments provided in the dictionary
         # are explicitly keyword arguments for the GalSim drawImage routine.
         if not drawImage_kwargs:
-            drawImage_kwargs = Timer.DRAWIMAGE_DEFAULT_PARAMS
+            drawImage_kwargs = self.get_drawImage_default_params(psf=self.cur_psf_name)
 
 
         # Output the pixel scale that this is being drawn at.
@@ -473,6 +496,28 @@ class Timer:
             # Avoid aliasing by making a larger image
             Nk = int(np.ceil(maxk/dk)) * 2
         return Nk
+
+
+    def get_drawImage_default_params(self, psf=None, galaxy=None):
+        """
+        This routine simply returns the default parameters for the drawImage routine
+        when using drawImage with a specific psf and a galaxy. At least one of the
+        kwargs must be populated.
+        """
+        if psf:
+            return Timer.DRAWIMAGE_DEFAULT_PARAMS["psfs"][psf]
+        elif galaxy:
+            return Timer.DRAWIMAGE_DEFAULT_PARAMS["galaxies"][galaxy]
+        elif psf and galaxy:
+            consolidated = dict()
+            for psf_key in Timer.DRAWIMAGE_DEFAULT_PARAMS[psf]:
+                for gal_key in Timer.DRAWIMAGE_DEFAULT_PARAMS[galaxy]:
+                    consolidated[psf_key] = Timer.DRAWIMAGE_DEFAULT_PARAMS["psfs"][psf][psf_key]
+                    consolidated[gal_key] = Timer.DRAWIMAGE_DEFAULT_PARAMS["galaxies"][galaxy][gal_key]
+
+            return consolidated
+        else:
+            raise RuntimeError("At least psf or galaxy keywords must be populated.")
 
 
 
