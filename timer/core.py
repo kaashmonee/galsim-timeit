@@ -140,7 +140,7 @@ class Timer:
     }
 
 
-    def __init__(self, galaxy, flux_range : tuple, num_intervals=15, debug=False, scale="linear", **kwargs):
+    def __init__(self, galaxy, flux_range : tuple, num_intervals=15, debug=False, scale="log", **kwargs):
         """
         Timer object constructor. Takes in a type of galaxy and the flux range
         to vary. The flux range is a tuple that takes in the min flux and the max flux.
@@ -200,12 +200,9 @@ class Timer:
 
         # Creating the flux range
         self.fluxs = np.linspace(self.start, self.end, self.cur_num_intervals)
-        self.log_fluxs = np.logspace(np.log(self.start), np.log(self.end), self.cur_num_intervals)
+        self.log_fluxs = np.logspace(np.log10(self.start), np.log10(self.end), self.cur_num_intervals)
 
-        # Default scale is linear
-        # Change this using the change_flux_scale routine.
-        self.flux_scale = self.fluxs
-
+    
     def set_flux_scale(self, scale):
         """
         Sets the scale for plotting.
