@@ -153,7 +153,7 @@ class Timer:
     }
 
 
-    def __init__(self, galaxy, flux_range : tuple, num_intervals=15, debug=False, **kwargs):
+    def __init__(self, galaxy, flux_range:tuple=(1.e1, 1.e5), num_intervals=15, debug=False, scale="log", **kwargs):
         """
         Timer object constructor. Takes in a type of galaxy and the flux range
         to vary. The flux range is a tuple that takes in the min flux and the max flux.
@@ -178,6 +178,7 @@ class Timer:
 
         # Debug flag. We compute and plot fewer fluxes if the debug flag is set to true
         self.set_debug(debug)
+        self.set_flux_scale(scale)
 
         # The current galaxy associated with this Timer class.
         self.cur_gal_objs = []
@@ -199,7 +200,6 @@ class Timer:
         self.rng = galsim.BaseDeviate(self.random_seed + 1)
         
 
-
     def set_debug(self, debug):
         """
         Sets an internal debug flag. If true, then changes the number of flux levels and plots
@@ -213,11 +213,30 @@ class Timer:
 
         # Creating the flux range
         self.fluxs = np.linspace(self.start, self.end, self.cur_num_intervals)
-        self.log_fluxs = np.logspace(np.log(self.start), np.log(self.end), self.cur_num_intervals)
+        self.log_fluxs = np.logspace(np.log10(self.start), np.log10(self.end), self.cur_num_intervals)
 
-        # Default scale is linear
-        # Change this using the change_flux_scale routine.
-        self.flux_scale = self.fluxs
+    
+    def set_flux_scale(self, scale):
+        """
+        Sets the scale for plotting.
+        """
+        
+        # self.debug is initialized in the set_debug routine. 
+        # This function depends on the set_debug routine.
+        # This is a correctness check to ensure that this
+        # function runs only AFTER the set_debug routine.
+        try:
+            assert self.debug or not self.debug
+        except AttributeError as e:
+            raise RuntimeError(str(e) + "\nThe set_debug routine must run first before this routine can be run.")
+
+        if scale == "linear":
+            self.flux_scale = self.fluxs
+        elif scale == "log":
+            self.flux_scale = self.log_fluxs
+        else:
+            raise ValueError("scale parameter must be either 'linear' or 'log'.")
+
 
     def time_init(self, random_offset_range=0, repeat=1):
         """
