@@ -3,11 +3,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import galsim
 from scipy import stats
+import os
 
 class Experiment:
     """
     This class will store all the experiments.
     """
+
+    def __init__(self, save=True, show=False):
+        self.save = save
+        self.show = show
 
     def time_phot_shooting_vs_gal_size(self):
         """
@@ -54,7 +59,11 @@ class Experiment:
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
 
-        plt.show()
+        if self.show:
+            plt.show()
+
+        if self.save:
+            self.save_figure(fig, 1)
 
 
     def time_phot_shooting_vs_gal_shape(self):
@@ -111,8 +120,11 @@ class Experiment:
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
 
-        plt.show()
+        if self.show:
+            plt.show()
 
+        if self.save:
+            self.save_figure(fig, 2)
 
 
     def time_phot_shooting_vs_profile(self):
@@ -155,8 +167,11 @@ class Experiment:
         axs[0].legend()
         axs[1].legend()
 
-        plt.show()
+        if self.show:
+            plt.show()
 
+        if self.save:
+            self.save_figure(fig, 3)
     
     def time_phot_shooting_vs_psf(self):
         """
@@ -200,8 +215,11 @@ class Experiment:
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
 
+        if self.show:
+            plt.show()
 
-        plt.show()
+        if self.save:
+            self.save_figure(fig, 4)
 
 
     def time_phot_shooting_vs_optical_psf_params(self):
@@ -287,7 +305,11 @@ class Experiment:
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
 
-        plt.show()
+        if self.show:
+            plt.show()
+
+        if self.save:
+            self.save_figure(fig, 5)
 
 
     def time_phot_shooting_vs_optical_psf_vary_obscuration(self):
@@ -345,7 +367,11 @@ class Experiment:
         init_axis.legend(legend_labels)
         draw_axis.legend(legend_labels)
 
-        plt.show()
+        if self.show:
+            plt.show()
+
+        if self.save:
+            self.save_figure(fig, 6)
 
 
     def time_phot_shooting_vs_optical_psf_vary_lam_over_diam(self):
@@ -404,7 +430,11 @@ class Experiment:
         init_axis.legend(legend_labels)
         draw_axis.legend(legend_labels)
 
-        plt.show()
+        if self.show:
+            plt.show()
+
+        if self.save:
+            self.save_figure(fig, 7)
 
 
     def fft_image_size_vs_flux_vary_lam_over_diam(self):
@@ -485,7 +515,11 @@ class Experiment:
         ax2_legend_labels = [("lam/diam = %f arcseconds" % lod) for lod in lam_over_diams]
         ax2.legend(ax2_legend_labels)
 
-        plt.show()
+        if self.show:
+            plt.show()
+
+        if self.save:
+            self.save_figure(fig, 8)
 
 
 
@@ -508,6 +542,28 @@ class Experiment:
             print("%s fwhm (arcseconds): %f" % (psf, t.cur_psf_obj.calculateFWHM()))
 
 
+    def save_figure(self, figure, experiment_number):
+        """
+        This saves the image to the ./experiment_results directory as a PNG.
+        """
+        cwd = os.getcwd()
+        save_dir = os.path.join(cwd, "experiment_results")
+
+        # Make the directory if it is not already there.
+        if not os.path.isdir(save_dir):
+            os.mkdir(save_dir)
+        
+        filename = "experiment_%d.png" % experiment_number
+        save_loc = os.path.join(save_dir, filename)
+
+        width = 15 # inches 
+        height = 10 # inches
+        figure.set_size_inches(width, height, forward=True)
+        figure.savefig(save_loc)
+
+        print("Saving %s" % filename)
+
+        
 
 def main():
     e = Experiment()
