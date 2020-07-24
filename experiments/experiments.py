@@ -26,7 +26,6 @@ class Experiment:
               half_light_radius value.
         """
 
-        start, end = 1.e3, 1.e5
         half_light_radii = np.linspace(0.5, 1.5, 5)
 
         fig, axs = plt.subplots(1, 2)
@@ -37,7 +36,7 @@ class Experiment:
             params = {
                 "half_light_radius": r
             }
-            t = Timer("exponential", (start, end), **params)
+            t = Timer("exponential", **params)
             t.time_init()
             t.set_psf("kolmogorov")
             t.compute_phot_draw_times()
@@ -74,8 +73,6 @@ class Experiment:
             - Varying the galaxy shear
             - Plotting initialization time and convolution time vs. flux for each shear value
         """
-        start, end = 1.e3, 1.e5
-
         # Obtained from demo3.py
         # The lower the gal_q the greater the shear.
         gal_qs = np.linspace(0.2, 1, 5)
@@ -86,7 +83,7 @@ class Experiment:
         draw_axis = axs[1]
 
         for gal_q in gal_qs:
-            t = Timer("sersic", (start, end))
+            t = Timer("sersic")
             t.time_init()
             t.plot_init_times(axis=init_axis)
 
@@ -135,7 +132,6 @@ class Experiment:
             - Plot initialization time and convolution time for each flux value
               for each galaxy.
         """
-        start, end = 1.e3, 1.e5
 
         fig, axs = plt.subplots(1, 2)
         init_axis = axs[0]
@@ -143,7 +139,7 @@ class Experiment:
         psf = "kolmogorov"
 
         for gal_name in Timer.GALAXY_NAMES:
-            t = Timer(gal_name, (start, end))
+            t = Timer(gal_name)
             t.time_init()
             t.plot_init_times(axis=init_axis)
 
@@ -177,8 +173,6 @@ class Experiment:
             - Plot instantiation time and convolution time for each flux value on different convolutions
               with different PSFs.
         """
-        start, end = 1.e3, 1.e5
-
         fig, axs = plt.subplots(1, 2)
 
         init_axis = axs[0]
@@ -187,7 +181,7 @@ class Experiment:
         galaxy = "sersic"
 
         for psf in Timer.PSFS:
-            t = Timer(galaxy, (start, end))
+            t = Timer(galaxy)
 
             t.time_init()
             t.plot_init_times(axis=init_axis)
@@ -252,8 +246,6 @@ class Experiment:
 
         fig, axs = plt.subplots(1, 2)
 
-        start, end = 1.e3, 1.e5
-
         init_axis = axs[0]
         draw_axis = axs[1]
 
@@ -268,7 +260,7 @@ class Experiment:
                 "aberrations": aberrations
             }
 
-            t = Timer(galaxy, (start, end))
+            t = Timer(galaxy)
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
@@ -318,8 +310,6 @@ class Experiment:
 
         fig, axs = plt.subplots(1, 2)
 
-        start, end = 1.e3, 1.e5
-
         init_axis = axs[0]
         draw_axis = axs[1]
 
@@ -335,7 +325,7 @@ class Experiment:
                 "obscuration": obscuration
             }
 
-            t = Timer(galaxy, (start, end))
+            t = Timer(galaxy)
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
@@ -376,8 +366,6 @@ class Experiment:
         """                
         fig, axs = plt.subplots(1, 2)
 
-        start, end = 1.e3, 1.e5
-
         init_axis = axs[0]
         draw_axis = axs[1]
 
@@ -396,7 +384,7 @@ class Experiment:
                 "lam_over_diam": lam_over_diam
             }
 
-            t = Timer(galaxy, (start, end))
+            t = Timer(galaxy)
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
@@ -442,8 +430,6 @@ class Experiment:
         galaxy = "sersic"
         psf = "optical"
 
-        start, end = 1.e3, 1.e5
-
         # Obtained from GalSim documentation:
         # http://galsim-developers.github.io/GalSim/_build/html/psf.html#optical-psf
         # Last multiplication operation converts to arcseconds.
@@ -474,7 +460,7 @@ class Experiment:
                 "lam_over_diam": lam_over_diam
             }
 
-            t = Timer(galaxy, (start, end))
+            t = Timer(galaxy)
             t.time_init()
 
             t.set_psf(psf, **params)
@@ -511,11 +497,10 @@ class Experiment:
         """
 
         # These values do not matter!
-        s, e = 1, 2   
         galaxy = "sersic"
         for psf in Timer.PSFS:
 
-            t = Timer(galaxy, (s, e))
+            t = Timer(galaxy)
             t.time_init()
 
             t.set_psf(psf)
@@ -526,13 +511,13 @@ class Experiment:
 
 def main():
     e = Experiment()
-    # e.time_phot_shooting_vs_gal_size()
-    # e.time_phot_shooting_vs_gal_shape()
-    # e.time_phot_shooting_vs_profile()
-    # e.time_phot_shooting_vs_psf()
-    # e.time_phot_shooting_vs_optical_psf_params()
-    # e.time_phot_shooting_vs_optical_psf_vary_obscuration()
-    # e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
+    e.time_phot_shooting_vs_gal_size()
+    e.time_phot_shooting_vs_gal_shape()
+    e.time_phot_shooting_vs_profile()
+    e.time_phot_shooting_vs_psf()
+    e.time_phot_shooting_vs_optical_psf_params()
+    e.time_phot_shooting_vs_optical_psf_vary_obscuration()
+    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
     e.fft_image_size_vs_flux_vary_lam_over_diam()
     e.get_PSF_FWHM()
 
