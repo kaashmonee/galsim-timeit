@@ -140,7 +140,7 @@ class Timer:
     }
 
 
-    def __init__(self, galaxy, flux_range : tuple, num_intervals=15, debug=False, scale="log", **kwargs):
+    def __init__(self, galaxy, flux_range:tuple=(1.e1, 1.e5), num_intervals=15, debug=False, scale="log", **kwargs):
         """
         Timer object constructor. Takes in a type of galaxy and the flux range
         to vary. The flux range is a tuple that takes in the min flux and the max flux.
