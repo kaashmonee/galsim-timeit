@@ -530,7 +530,6 @@ class Experiment:
         simply for the purposes of obtaining a FWHM value.
         """
 
-        # These values do not matter!
         galaxy = "sersic"
         for psf in Timer.PSFS:
 
