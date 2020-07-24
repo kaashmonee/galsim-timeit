@@ -96,20 +96,33 @@ class Timer:
         "psf_re": PSF_RE
     }
 
+
+    # We seek a FWHM of 0.7 arcseconds for the VonKarman, Moffat, and Kolmogorov PSFs.
+    # We compute a multiplier for the r0 values for the VonKarman and Kolmogorov
+    # PSFs to obtain a FWHM of 0.7 arcseconds. We also compute a multiplier for the 
+    # default PSF_RE parameter for the Moffat PSF to achieve the same results. 
+    # @rmandelb: The reason to do this is that later on, when we are using profiles defined by a DFT, 
+    # it’s valuable to have kind of similar baseline sizes as your default.  
+    # (They are also closer to realistic ones, which is a good practice to adopt in general.)
+    VK_R0_MULT = 0.7/0.486997
+    MOFFAT_PSF_RE_MULT = 0.7/1.773023
+    KOLMOGOROV_R0_MULT = 0.7/0.627289
+
+
     PSF_CONSTRUCTOR_DEFAULT_PARAMS = {
         "kolmogorov": {
             "lam": PSF_DEFAULT_CONFIG["lam"],
-            "r0": PSF_DEFAULT_CONFIG["r0"],
+            "r0": PSF_DEFAULT_CONFIG["r0"] * KOLMOGOROV_R0_MULT, 
             "scale_unit": galsim.arcsec
         },
         "vonkarman": {
             "lam": PSF_DEFAULT_CONFIG["lam"],
-            "r0": PSF_DEFAULT_CONFIG["r0"]
+            "r0": PSF_DEFAULT_CONFIG["r0"] * VK_R0_MULT, 
         },
         "moffat": {
             "beta": PSF_DEFAULT_CONFIG["psf_beta"],
             "flux": 1.0,
-            "half_light_radius": PSF_DEFAULT_CONFIG["psf_re"]
+            "half_light_radius": PSF_DEFAULT_CONFIG["psf_re"] * MOFFAT_PSF_RE_MULT, 
         },
         "optical": {
             "lam": PSF_DEFAULT_CONFIG["lam"],
