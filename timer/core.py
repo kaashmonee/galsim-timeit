@@ -104,9 +104,9 @@ class Timer:
     # @rmandelb: The reason to do this is that later on, when we are using profiles defined by a DFT, 
     # it’s valuable to have kind of similar baseline sizes as your default.  
     # (They are also closer to realistic ones, which is a good practice to adopt in general.)
-    VK_R0_MULT = 0.7/0.486997
+    VK_R0_MULT = 0.486997/0.7
     MOFFAT_PSF_RE_MULT = 0.7/1.773023
-    KOLMOGOROV_R0_MULT = 0.7/0.627289
+    KOLMOGOROV_R0_MULT = 0.627289/0.7
 
 
     PSF_CONSTRUCTOR_DEFAULT_PARAMS = {
