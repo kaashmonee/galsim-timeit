@@ -294,6 +294,8 @@ class Experiment:
         galaxy = "sersic"
         psf = "optical"
 
+        lines = []
+
         for aberrations in aberrations_list:
 
             params = {
@@ -310,6 +312,7 @@ class Experiment:
             t.set_psf(psf, **params)
 
             t.compute_phot_draw_times()
+            lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
 
@@ -327,6 +330,9 @@ class Experiment:
         axs[1].set_title(title1)
 
         axs[0].legend(legend_labels)
+
+        legend_labels = [label + "\n%s" % annot for (label, annot) in zip(legend_labels, lines)]
+
         axs[1].legend(legend_labels)
 
         if self.show:
