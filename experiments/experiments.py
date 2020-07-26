@@ -37,6 +37,8 @@ class Experiment:
         init_ax = axs[0]
         draw_ax = axs[1]
 
+        best_fit_equations = []
+
         for r in half_light_radii:
             params = {
                 "half_light_radius": r
@@ -45,11 +47,12 @@ class Experiment:
             t.time_init()
             t.set_psf("kolmogorov")
             t.compute_phot_draw_times()
+            best_fit_equations.append(t.draw_time_line_annotation)
 
             t.plot_init_times(axis=init_ax)
             t.plot_draw_times(axis=draw_ax)
 
-        legend_labels = ["r = %f" % r for r in half_light_radii]
+        legend_labels = ["r = %f\n%s" % (r, annotation) for (r, annotation) in zip(half_light_radii, best_fit_equations)]
 
         title0 = axs[0].get_title() + "\nVarying half_light_radius"
         title1 = axs[1].get_title() + "\nVarying half_light_radius"
@@ -565,7 +568,7 @@ class Experiment:
         
 
 def main():
-    e = Experiment()
+    e = Experiment(save=False, show=True)
     e.time_phot_shooting_vs_gal_size()
     e.time_phot_shooting_vs_gal_shape()
     e.time_phot_shooting_vs_profile()
