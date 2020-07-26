@@ -94,6 +94,8 @@ class Experiment:
         init_axis = axs[0]
         draw_axis = axs[1]
 
+        best_fit_line_equations = []
+
         for gal_q in gal_qs:
             t = Timer("sersic")
             t.time_init()
@@ -109,10 +111,12 @@ class Experiment:
 
             t.set_psf("kolmogorov")
             t.compute_phot_draw_times()
+            
+            best_fit_line_equations.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
 
-        legend_labels = ["q = %f" % q for q in gal_qs]
+        legend_labels = ["q = %f\n%s" % (q, annot) for (q, annot) in zip(gal_qs, best_fit_line_equations)]
 
         title0 = axs[0].get_title() + "\nVarying q value (shear)"
         title1 = axs[1].get_title() + "\nVarying q value (shear)"
@@ -153,6 +157,8 @@ class Experiment:
         draw_axis = axs[1]
         psf = "kolmogorov"
 
+        best_fit_line_equations = []
+
         for gal_name in Timer.GALAXY_NAMES:
             t = Timer(gal_name)
             t.time_init()
@@ -164,11 +170,26 @@ class Experiment:
                 t.save_phot_shoot_images()
 
             t.plot_draw_times(axis=draw_axis)
+            best_fit_line_equations.append(t.draw_time_line_annotation)
 
         axs[0].set_title("Init Time for Different Galaxy Profiles")
         axs[1].set_title("Time vs. Photon Shooting for Different Profiles Convolved with %s PSF" % psf)
         axs[0].legend()
-        axs[1].legend()
+
+        # This is done because of the way get_legend_handles_lables() returns and because
+        # of the fact that the Timer class has a default method of setting labels by galaxy name.
+        # It first produces a tuple where the first element is a list of matplotlib.lines.Line2D objects
+        # The 2nd element is a list of the legend labels. We furthermore only want to 
+        # modify the first 4 labels since they represent hte labels for the plot, so we 
+        # split up the original legend_labels list into 2.
+        line_legend_labels_to_modify = axs[1].get_legend_handles_labels()[1][0:5]
+        rest = axs[1].get_legend_handles_labels()[1][5:]
+
+        labels_annotated_half = [label + "\n%s" % annot for (label, annot) in zip(line_legend_labels_to_modify, best_fit_line_equations)]
+        ax1labels = list(labels_annotated_half) + list(rest)
+
+        # import pdb; pdb.set_trace()
+        axs[1].legend(ax1labels)
 
         if self.show:
             plt.show()
@@ -569,8 +590,8 @@ class Experiment:
 
 def main():
     e = Experiment(save=False, show=True)
-    e.time_phot_shooting_vs_gal_size()
-    e.time_phot_shooting_vs_gal_shape()
+    # e.time_phot_shooting_vs_gal_size()
+    # e.time_phot_shooting_vs_gal_shape()
     e.time_phot_shooting_vs_profile()
     e.time_phot_shooting_vs_psf()
     e.time_phot_shooting_vs_optical_psf_params()
