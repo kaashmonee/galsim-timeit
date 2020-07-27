@@ -148,3 +148,6 @@ examples/
 # saved images
 experiments/experiment_results/
 
+# binaries
+*.zip
+
