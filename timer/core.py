@@ -307,6 +307,7 @@ class Timer:
         if self.cur_flux_scale == "log":
             axis.set_xscale("log")
             axis.set_yscale("log")
+            axis.autoscale_view(tight=True)
 
         axis.plot(self.flux_scale[1:], np.array(self.init_times)[1:] * 10**6, label=self.cur_gal_name)
 
@@ -505,10 +506,6 @@ class Timer:
 
         axis.set(xlabel="Flux", ylabel="Time (s)")
 
-        if self.cur_flux_scale == "log":
-            axis.set_xscale("log")
-            axis.set_yscale("log")
-
         axis.scatter(self.flux_scale_disp, self.final_times_disp, label=self.cur_gal_name)
 
         slope = self.draw_time_lin_regres_dat[0]
@@ -516,7 +513,10 @@ class Timer:
 
         axis.plot(self.flux_scale_disp, intercept + slope * self.flux_scale_disp, label=self.cur_gal_name)
 
-        top_right = (max(self.flux_scale) * 0.75, max(self.final_times) * 0.75)
+        if self.cur_flux_scale == "log":
+            axis.set_xscale("log")
+            axis.set_yscale("log")
+            axis.autoscale_view(tight=True)
 
         # If the user specifies an axis, this means they want to manage the plotting themselves.
         # We then do not want to call show() prematurely, because the user will be responsible for

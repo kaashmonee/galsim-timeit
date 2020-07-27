@@ -166,8 +166,6 @@ class Experiment:
 
             t.set_psf(psf)
             t.compute_phot_draw_times()
-            if gal_name == "point":
-                t.save_phot_shoot_images()
 
             t.plot_draw_times(axis=draw_axis)
             best_fit_line_equations.append(t.draw_time_line_annotation)
@@ -218,6 +216,7 @@ class Experiment:
         draw_axis = axs[1]
 
         galaxy = "sersic"
+        lines = []
 
         for psf in Timer.PSFS:
             t = Timer(galaxy)
@@ -228,6 +227,7 @@ class Experiment:
             t.set_psf(psf)
 
             t.compute_phot_draw_times()
+            lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
 
@@ -237,6 +237,8 @@ class Experiment:
         axs[1].set_title(title1)
 
         axs[0].legend(legend_labels)
+
+        legend_labels = [label+"\n%s" % annot for (label, annot) in zip(legend_labels, lines)]
         axs[1].legend(legend_labels)
 
         if self.show:
@@ -370,6 +372,8 @@ class Experiment:
 
         obscurations = np.linspace(0, 0.5, 5)
 
+        lines = []
+
         for obscuration in obscurations:
             params = {
                 "lam": Timer.DEFAULT_LAMBDA,
@@ -385,6 +389,7 @@ class Experiment:
             t.set_psf(psf, **params)
 
             t.compute_phot_draw_times()
+            lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
 
@@ -395,6 +400,8 @@ class Experiment:
         legend_labels = ["obscuration = %f" % o for o in obscurations]
 
         init_axis.legend(legend_labels)
+
+        legend_labels = [label+"\n%s" % annot for (label, annot) in zip(legend_labels, lines)]
         draw_axis.legend(legend_labels)
 
         if self.show:
@@ -435,6 +442,8 @@ class Experiment:
 
         lam_over_diams = np.linspace(0.1, 5., 5) * lod
 
+        lines = []
+
         for lam_over_diam in lam_over_diams:
             params = {
                 "lam_over_diam": lam_over_diam
@@ -448,6 +457,7 @@ class Experiment:
             t.set_psf(psf, **params)
 
             t.compute_phot_draw_times()
+            lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
 
@@ -458,6 +468,8 @@ class Experiment:
         legend_labels = ["lam_over_diam = %f arcsecs" % lod for lod in lam_over_diams]
 
         init_axis.legend(legend_labels)
+
+        legend_labels = [label+"\n%s" % annot for (label, annot) in zip(legend_labels, lines)]
         draw_axis.legend(legend_labels)
 
         if self.show:
@@ -487,7 +499,7 @@ class Experiment:
 
         fig, [ax, ax2] = plt.subplots(1, 2)
 
-        galaxy = "sersic"
+        galaxy = "point"
         psf = "optical"
 
         # Obtained from GalSim documentation:
@@ -503,17 +515,19 @@ class Experiment:
         image_sizes = []
 
         # Setting up plotting...
-        title = "Image Size vs. lam_over_diam Parameter with \nSersic Galaxy Profile Convolved with Optical PSF"
+        title = "Image Size vs. lam_over_diam Parameter with \n%s Galaxy Profile Convolved with %s PSF" % (galaxy, psf)
         ax.set_title(title)
         ax.set_xlabel("lambda/diam (arcseconds)")
         ax.set_ylabel("Image Sizes")
 
-        ax2.set_title("Image Size vs. Flux Response on lam_over_diam\nSersic Galaxy Convolved with Optical PSF")
+        ax2.set_title("Image Size vs. Flux Response on lam_over_diam\n%s Galaxy Convolved with %s PSF" % (galaxy, psf))
         ax2.set_xlabel("Flux")
         ax2.set_ylabel("Image Sizes")
 
         avg_img_sizes = []
         img_size_std_devs = []
+
+        lines = []
 
         for ctr, lam_over_diam in enumerate(lam_over_diams):
             params = {
@@ -526,6 +540,7 @@ class Experiment:
             t.set_psf(psf, **params)
 
             t.compute_phot_draw_times()
+            lines.append(t.draw_time_line_annotation)
 
             img_sizes = [img[1]["image_size"] for img in t.rendered_images]
 
@@ -537,12 +552,15 @@ class Experiment:
             avg_img_sizes.append(avg_img_size)
             img_size_std_devs.append(img_size_std_dev)
 
+            t.save_phot_shoot_images()
+
             print("%d/%d" % (ctr+1, len(lam_over_diams)))
             
 
         # Plotting
         ax.errorbar(lam_over_diams, avg_img_sizes, fmt="o")
-        ax2_legend_labels = [("lam/diam = %f arcseconds" % lod) for lod in lam_over_diams]
+
+        ax2_legend_labels = ["lam/diam = %f arcseconds\n%s" % (lod, annot) for (lod, annot) in zip(lam_over_diams, lines)]
         ax2.legend(ax2_legend_labels)
 
         if self.show:
@@ -585,8 +603,8 @@ class Experiment:
         filename = "experiment_%d.png" % experiment_number
         save_loc = os.path.join(save_dir, filename)
 
-        width = 15 # inches 
-        height = 10 # inches
+        width = 20 # inches 
+        height = 15 # inches
         figure.set_size_inches(width, height, forward=True)
         figure.savefig(save_loc)
 
@@ -595,9 +613,9 @@ class Experiment:
         
 
 def main():
-    e = Experiment(save=False, show=True)
-    # e.time_phot_shooting_vs_gal_size()
-    # e.time_phot_shooting_vs_gal_shape()
+    e = Experiment()
+    e.time_phot_shooting_vs_gal_size()
+    e.time_phot_shooting_vs_gal_shape()
     e.time_phot_shooting_vs_profile()
     e.time_phot_shooting_vs_psf()
     e.time_phot_shooting_vs_optical_psf_params()
