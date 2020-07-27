@@ -229,13 +229,15 @@ class Timer:
             assert self.debug or not self.debug
         except AttributeError as e:
             raise RuntimeError(str(e) + "\nThe set_debug routine must run first before this routine can be run.")
-
+        
         if scale == "linear":
             self.flux_scale = self.fluxs
         elif scale == "log":
             self.flux_scale = self.log_fluxs
         else:
             raise ValueError("scale parameter must be either 'linear' or 'log'.")
+
+        self.cur_flux_scale = scale
 
 
     def time_init(self, random_offset_range=0, repeat=1):
@@ -302,6 +304,11 @@ class Timer:
 
         # Omit the first point 
         # This is because the first point dominates the time taken
+        if self.cur_flux_scale == "log":
+            axis.set_xscale("log")
+            axis.set_yscale("log")
+            axis.autoscale_view(tight=True)
+
         axis.plot(self.flux_scale[1:], np.array(self.init_times)[1:] * 10**6, label=self.cur_gal_name)
 
         logger.info("Done plotting init...")
@@ -419,6 +426,8 @@ class Timer:
 
             logger.info("Drawing %d/%d" % (gal_ind+1, self.cur_num_intervals))
 
+        # Fit a line to the flux vs. draw time
+        self.compute_draw_time_linear_regression(self.flux_scale[1:], self.final_times[1:])
 
 
     def save_phot_shoot_images(self, directory="", save=True, show=False):
@@ -457,6 +466,22 @@ class Timer:
                 plt.imshow(img.array, cmap="gray")
 
 
+    def compute_draw_time_linear_regression(self, fluxs, final_times):
+        """
+        Given two arrays/lists of the same dimensions, 
+        computes the line of regression and returns the
+        value. Also returns an annotation value that is supposed
+        to be the string representation of that value.
+        """
+        self.flux_scale_disp = fluxs
+        self.final_times_disp = final_times
+
+        self.draw_time_lin_regres_dat = stats.linregress(fluxs, final_times)
+        slope = self.draw_time_lin_regres_dat[0]
+        intercept = self.draw_time_lin_regres_dat[1]
+
+        self.draw_time_line_annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
+
 
     def plot_draw_times(self, axis=None):
         """
@@ -481,14 +506,17 @@ class Timer:
 
         axis.set(xlabel="Flux", ylabel="Time (s)")
 
-        axis.scatter(self.flux_scale[1:], self.final_times[1:], label=self.cur_gal_name)
-        slope, intercept, r_value, p_value, stderr = stats.linregress(self.flux_scale[1:], self.final_times[1:])
-        axis.plot(self.flux_scale[1:], intercept + slope * self.flux_scale[1:], label=self.cur_gal_name)
+        axis.scatter(self.flux_scale_disp, self.final_times_disp, label=self.cur_gal_name)
 
-        annotation = "y=" + str(round(slope, 10)) + "x" + "+" + str(round(intercept, 5))
+        slope = self.draw_time_lin_regres_dat[0]
+        intercept = self.draw_time_lin_regres_dat[1]
 
-        top_right = (max(self.flux_scale) * 0.75, max(self.final_times) * 0.75)
-        axis.annotate(annotation, top_right)
+        axis.plot(self.flux_scale_disp, intercept + slope * self.flux_scale_disp, label=self.cur_gal_name)
+
+        if self.cur_flux_scale == "log":
+            axis.set_xscale("log")
+            axis.set_yscale("log")
+            axis.autoscale_view(tight=True)
 
         # If the user specifies an axis, this means they want to manage the plotting themselves.
         # We then do not want to call show() prematurely, because the user will be responsible for
