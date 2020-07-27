@@ -229,13 +229,15 @@ class Timer:
             assert self.debug or not self.debug
         except AttributeError as e:
             raise RuntimeError(str(e) + "\nThe set_debug routine must run first before this routine can be run.")
-
+        
         if scale == "linear":
             self.flux_scale = self.fluxs
         elif scale == "log":
             self.flux_scale = self.log_fluxs
         else:
             raise ValueError("scale parameter must be either 'linear' or 'log'.")
+
+        self.cur_flux_scale = scale
 
 
     def time_init(self, random_offset_range=0, repeat=1):
@@ -302,6 +304,10 @@ class Timer:
 
         # Omit the first point 
         # This is because the first point dominates the time taken
+        if self.cur_flux_scale == "log":
+            axis.set_xscale("log")
+            axis.set_yscale("log")
+
         axis.plot(self.flux_scale[1:], np.array(self.init_times)[1:] * 10**6, label=self.cur_gal_name)
 
         logger.info("Done plotting init...")
@@ -498,6 +504,10 @@ class Timer:
             raise AttributeError(str(e) + "\nPlease run the compute_phot_draw_times routine first.")
 
         axis.set(xlabel="Flux", ylabel="Time (s)")
+
+        if self.cur_flux_scale == "log":
+            axis.set_xscale("log")
+            axis.set_yscale("log")
 
         axis.scatter(self.flux_scale_disp, self.final_times_disp, label=self.cur_gal_name)
 
