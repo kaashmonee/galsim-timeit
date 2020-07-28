@@ -305,11 +305,8 @@ class Experiment:
 
         for aberrations in aberrations_list:
 
-            params = {
-                "lam": Timer.DEFAULT_LAMBDA,
-                "diam": Timer.DEFAULT_DIAMETER,
-                "aberrations": aberrations
-            }
+            params = Timer.PSF_CONSTRUCTOR_DEFAULT_PARAMS[psf]
+            params["aberrations"] = aberrations
 
             t = Timer(galaxy)
             t.time_init()
@@ -400,9 +397,6 @@ class Experiment:
             t.plot_draw_times(axis=draw_axis)
 
 
-        title0 = init_axis.get_title() + "\nVarying obscuration parameter in OpticalPSF"
-        title1 = draw_axis.get_title() + "\nVarying obscuration parameter in OpticalPSF"
-
         legend_labels = ["obscuration = %f" % o for o in obscurations]
 
         init_axis.legend(legend_labels)
@@ -469,9 +463,6 @@ class Experiment:
             t.plot_draw_times(axis=draw_axis)
 
 
-        title0 = init_axis.get_title() + "\nVarying lam_over_diam in OpticalPSF"
-        title1 = draw_axis.get_title() + "\nVarying lam_over_diam in OpticalPSF"
-
         legend_labels = ["lam_over_diam = %f arcsecs" % lod for lod in lam_over_diams]
 
         init_axis.legend(legend_labels)
@@ -520,7 +511,6 @@ class Experiment:
         end_scale = 5.0
 
         lam_over_diams = np.linspace(start_scale, end_scale, resolution) * lod
-        image_sizes = []
 
         # Setting up plotting...
         title = "Image Size vs. lam_over_diam Parameter with \n%s Galaxy Profile Convolved with %s PSF" % (galaxy, psf)
@@ -623,15 +613,15 @@ class Experiment:
 
 def main():
     e = Experiment()
-    e.time_phot_shooting_vs_gal_size()
-    e.time_phot_shooting_vs_gal_shape()
-    e.time_phot_shooting_vs_profile()
+    # e.time_phot_shooting_vs_gal_size()
+    # e.time_phot_shooting_vs_gal_shape()
+    # e.time_phot_shooting_vs_profile()
     e.time_phot_shooting_vs_psf()
     e.time_phot_shooting_vs_optical_psf_params()
-    e.time_phot_shooting_vs_optical_psf_vary_obscuration()
-    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
-    e.fft_image_size_vs_flux_vary_lam_over_diam()
-    e.get_PSF_FWHM()
+    # e.time_phot_shooting_vs_optical_psf_vary_obscuration()
+    # e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
+    # e.fft_image_size_vs_flux_vary_lam_over_diam()
+    # e.get_PSF_FWHM()
 
 if __name__ == "__main__":
     main()

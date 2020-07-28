@@ -154,3 +154,6 @@ experiments/experiment_plots/
 # Misc
 Experiments.ipynb
 
+# Editors
+.vscode/
+
