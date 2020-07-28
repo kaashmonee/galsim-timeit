@@ -443,7 +443,7 @@ class Timer:
         # should not change.
         root = pathlib.Path(__file__).parent.parent.resolve() 
 
-        default_dir = os.path.join(root, "examples", "output")
+        default_dir = os.path.join(root, "experiments", "generated_images")
 
         save_dir = default_dir if directory == "" else directory
 

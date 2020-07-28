@@ -594,7 +594,7 @@ class Experiment:
         This saves the image to the ./experiment_results directory as a PNG.
         """
         cwd = os.getcwd()
-        save_dir = os.path.join(cwd, "experiment_results")
+        save_dir = os.path.join(cwd, "experiment_plots")
 
         # Make the directory if it is not already there.
         if not os.path.isdir(save_dir):
