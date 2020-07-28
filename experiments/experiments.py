@@ -16,6 +16,7 @@ class Experiment:
 
     def time_phot_shooting_vs_gal_size(self):
         """
+        experiment_1
         Experiment: Time to do photon shooting while varying the galaxy
         size and shape and keeping flux constant.
 
@@ -71,6 +72,7 @@ class Experiment:
 
     def time_phot_shooting_vs_gal_shape(self):
         """
+        experiment_2
         Experiment: Measure the time to do photon shooting while varying the galaxy
         shape, as demonstrated in demo2.py and demo3.py in the GalSim repo.
 
@@ -136,6 +138,7 @@ class Experiment:
 
     def time_phot_shooting_vs_profile(self):
         """
+        experiment_3
         Experiment: Measure the time to do photon shooting vs. flux while varying
         the galaxy profile.
 
@@ -197,6 +200,7 @@ class Experiment:
     
     def time_phot_shooting_vs_psf(self):
         """
+        experiment_4
         Experiment: Measure the time to do photon shooting vs. flux while varying the PSF.
 
         Expected results: We do not expect substantial differences between runs, since the PSF 
@@ -250,6 +254,7 @@ class Experiment:
 
     def time_phot_shooting_vs_optical_psf_params(self):
         """
+        experiment_5
         Experiment: Measure the time to do photon shooting vs. flux by varying various parameters of the Optical PSF.
 
         Expected results: Not sure
@@ -346,6 +351,7 @@ class Experiment:
 
     def time_phot_shooting_vs_optical_psf_vary_obscuration(self):
         """
+        experiment_6
         Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
         parameter for the OpticalPSF.
 
@@ -413,6 +419,7 @@ class Experiment:
 
     def time_phot_shooting_vs_optical_psf_vary_lam_over_diam(self):
         """
+        experiment_7
         Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
         parameter for the OpticalPSF.
 
@@ -481,6 +488,7 @@ class Experiment:
 
     def fft_image_size_vs_flux_vary_lam_over_diam(self):
         """
+        experiment_8
         Experiment: Determine relationship of lam_over_diam parameter to image size.
 
         Expected Results: On various runs with different lam_over_diam parameters, we expect
@@ -573,6 +581,7 @@ class Experiment:
 
     def get_PSF_FWHM(self):
         """
+        experiment_9
         This function just outputs the FWHM values for each PSF.
         Instantiates a dummy galaxy with a dummy start and end 
         simply for the purposes of obtaining a FWHM value.
@@ -594,7 +603,7 @@ class Experiment:
         This saves the image to the ./experiment_results directory as a PNG.
         """
         cwd = os.getcwd()
-        save_dir = os.path.join(cwd, "experiment_results")
+        save_dir = os.path.join(cwd, "experiment_plots")
 
         # Make the directory if it is not already there.
         if not os.path.isdir(save_dir):
