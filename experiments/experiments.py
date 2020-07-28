@@ -40,13 +40,17 @@ class Experiment:
 
         best_fit_equations = []
 
+        galaxy = "exponential"
+        psf = "kolmogorov"
+
         for r in half_light_radii:
-            params = {
-                "half_light_radius": r
-            }
-            t = Timer("exponential", **params)
+
+            params = Timer.GALAXY_CONSTRUCTOR_DEFAULT_PARAMS[galaxy]
+            params["half_light_radius"] = r
+
+            t = Timer(galaxy, flux_range=(1.e1, 1.e3), **params)
             t.time_init()
-            t.set_psf("kolmogorov")
+            t.set_psf(psf)
             t.compute_phot_draw_times()
             best_fit_equations.append(t.draw_time_line_annotation)
 
@@ -98,8 +102,10 @@ class Experiment:
 
         best_fit_line_equations = []
 
+        galaxy, psf = "sersic", "kolmogorov"
+
         for gal_q in gal_qs:
-            t = Timer("sersic")
+            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
             t.time_init()
             t.plot_init_times(axis=init_axis)
 
@@ -111,7 +117,7 @@ class Experiment:
 
             t.cur_gal_objs = mod_gal_objs
 
-            t.set_psf("kolmogorov")
+            t.set_psf(psf)
             t.compute_phot_draw_times()
             
             best_fit_line_equations.append(t.draw_time_line_annotation)
@@ -163,7 +169,7 @@ class Experiment:
         best_fit_line_equations = []
 
         for gal_name in Timer.GALAXY_NAMES:
-            t = Timer(gal_name)
+            t = Timer(gal_name, flux_range=(1.e1, 1.e3))
             t.time_init()
             t.plot_init_times(axis=init_axis)
 
@@ -223,7 +229,7 @@ class Experiment:
         lines = []
 
         for psf in Timer.PSFS:
-            t = Timer(galaxy)
+            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
 
             t.time_init()
             t.plot_init_times(axis=init_axis)
@@ -305,10 +311,10 @@ class Experiment:
 
         for aberrations in aberrations_list:
 
-            params = Timer.PSF_CONSTRUCTOR_DEFAULT_PARAMS[psf]
+            params = Timer.get_PSF_default_params(psf)
             params["aberrations"] = aberrations
 
-            t = Timer(galaxy)
+            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
@@ -378,13 +384,11 @@ class Experiment:
         lines = []
 
         for obscuration in obscurations:
-            params = {
-                "lam": Timer.DEFAULT_LAMBDA,
-                "diam": Timer.DEFAULT_DIAMETER,
-                "obscuration": obscuration
-            }
 
-            t = Timer(galaxy)
+            params = Timer.get_PSF_default_params(psf)
+            params["obscuration"] = obscuration
+
+            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
@@ -446,11 +450,18 @@ class Experiment:
         lines = []
 
         for lam_over_diam in lam_over_diams:
-            params = {
-                "lam_over_diam": lam_over_diam
-            }
+            
+            # Update params
+            # Have to get rid of lam and diam keys because 
+            # we're specifying lam_over_diam, and GalSim will only accept
+            # either a lam and diam value or a lam_over_diam value in its PSF
+            # constructors.
+            params = Timer.get_PSF_default_params(psf)
+            del params["lam"]
+            del params["diam"]
+            params["lam_over_diam"] = lam_over_diam
 
-            t = Timer(galaxy)
+            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
@@ -528,11 +539,15 @@ class Experiment:
         lines = []
 
         for ctr, lam_over_diam in enumerate(lam_over_diams):
-            params = {
-                "lam_over_diam": lam_over_diam
-            }
+            
+            # Updating custom params. Using default params and modifying it.
+            # This is done for the same reason as in experiment 7.
+            params = Timer.get_PSF_default_params(psf)
+            del params["lam"]
+            del params["diam"]
+            params["lam_over_diam"] = lam_over_diam
 
-            t = Timer(galaxy)
+            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
             t.time_init()
 
             t.set_psf(psf, **params)
@@ -580,7 +595,7 @@ class Experiment:
         galaxy = "sersic"
         for psf in Timer.PSFS:
 
-            t = Timer(galaxy)
+            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
             t.time_init()
 
             t.set_psf(psf)
@@ -613,15 +628,15 @@ class Experiment:
 
 def main():
     e = Experiment()
-    # e.time_phot_shooting_vs_gal_size()
-    # e.time_phot_shooting_vs_gal_shape()
-    # e.time_phot_shooting_vs_profile()
+    e.time_phot_shooting_vs_gal_size()
+    e.time_phot_shooting_vs_gal_shape()
+    e.time_phot_shooting_vs_profile()
     e.time_phot_shooting_vs_psf()
     e.time_phot_shooting_vs_optical_psf_params()
-    # e.time_phot_shooting_vs_optical_psf_vary_obscuration()
-    # e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
-    # e.fft_image_size_vs_flux_vary_lam_over_diam()
-    # e.get_PSF_FWHM()
+    e.time_phot_shooting_vs_optical_psf_vary_obscuration()
+    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
+    e.fft_image_size_vs_flux_vary_lam_over_diam()
+    e.get_PSF_FWHM()
 
 if __name__ == "__main__":
     main()
