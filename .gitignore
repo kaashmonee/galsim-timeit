@@ -146,7 +146,7 @@ cython_debug/
 examples/
 
 # saved images
-experiments/experiment_results/
+experiments/experiment_plots/
 
 # binaries
 *.zip
