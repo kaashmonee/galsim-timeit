@@ -514,9 +514,9 @@ class Timer:
         axis.plot(self.flux_scale_disp, intercept + slope * self.flux_scale_disp, label=self.cur_gal_name)
 
         if self.cur_flux_scale == "log":
-            axis.set_xscale("log")
             axis.set_yscale("log")
-            axis.autoscale_view(tight=True)
+            axis.set_xscale("log")
+            axis.autoscale(enable=True)
 
         # If the user specifies an axis, this means they want to manage the plotting themselves.
         # We then do not want to call show() prematurely, because the user will be responsible for
