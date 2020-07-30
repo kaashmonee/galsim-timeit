@@ -613,15 +613,15 @@ class Experiment:
 
 def main():
     e = Experiment()
-    # e.time_phot_shooting_vs_gal_size()
-    # e.time_phot_shooting_vs_gal_shape()
-    # e.time_phot_shooting_vs_profile()
+    e.time_phot_shooting_vs_gal_size()
+    e.time_phot_shooting_vs_gal_shape()
+    e.time_phot_shooting_vs_profile()
     e.time_phot_shooting_vs_psf()
     e.time_phot_shooting_vs_optical_psf_params()
-    # e.time_phot_shooting_vs_optical_psf_vary_obscuration()
-    # e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
-    # e.fft_image_size_vs_flux_vary_lam_over_diam()
-    # e.get_PSF_FWHM()
+    e.time_phot_shooting_vs_optical_psf_vary_obscuration()
+    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
+    e.fft_image_size_vs_flux_vary_lam_over_diam()
+    e.get_PSF_FWHM()
 
 if __name__ == "__main__":
     main()

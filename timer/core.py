@@ -268,7 +268,7 @@ class Timer:
             else:
                 temp_params["half_light_radius"] += rand_offset
 
-            gal, time_gal = timeit(self.cur_gal_name_constructor, repeat=repeat)(**temp_params)
+            gal, time_gal = timeit(self.cur_gal_name_constructor, min_of_n=repeat)(**temp_params)
             
             self.init_times.append(time_gal)
             self.cur_gal_objs.append(gal)
