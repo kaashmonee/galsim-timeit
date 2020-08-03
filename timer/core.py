@@ -153,7 +153,8 @@ class Timer:
     }
 
 
-    def __init__(self, galaxy, flux_range:tuple=(1.e1, 1.e5), num_intervals=15, debug=False, scale="log", **kwargs):
+    def __init__(self, galaxy, flux_range:tuple=None, num_intervals=15, 
+                 debug=False, scale="log", **kwargs):
         """
         Timer object constructor. Takes in a type of galaxy and the flux range
         to vary. The flux range is a tuple that takes in the min flux and the max flux.
@@ -161,6 +162,11 @@ class Timer:
         """
         # Setting the galaxy
         self.set_galaxy(galaxy, **kwargs)
+
+        # Set the default flux range
+        default_flux_range = (1.e1, 1.e5)
+        if flux_range is None:
+            flux_range = default_flux_range
 
         # Starting and ending indices
         (self.start, self.end) = flux_range
@@ -251,7 +257,7 @@ class Timer:
         # in the loop
         temp_params = copy.deepcopy(self.default_gal_args)
 
-        for i, gal_flux in enumerate(self.flux_scale):
+        for gal_flux in enumerate(self.flux_scale):
             rand_offset = np.random.random_sample() / (1 / random_offset_range) if random_offset_range != 0 else 0
 
             temp_params["flux"] = gal_flux
@@ -371,10 +377,14 @@ class Timer:
 
 
 
-    def compute_phot_draw_times(self, drawImage_kwargs:dict=None):
+    def compute_phot_draw_times(self, method="phot", drawImage_kwargs:dict=None):
         """
         Takes in a PSF and its parameters. If the **kwargs is left blank,
-        it uses a default set of parameters already defined. 
+        it uses a default set of parameters already defined. It also takes in 
+        a method optional kwarg. This is because this routine should be run 
+        in general with photon shooting, but we want to be able to run it with
+        FFTs so that we can confirm the flux independence of FFTs. So in certain
+        experiments, we will set method="fft".
         """
         try:
             logger.info("Computing draw times for the %s profile convolved with %s for %d flux levels." % (self.cur_gal_name, self.cur_psf_disp_name, self.cur_num_intervals))
@@ -404,11 +414,19 @@ class Timer:
         # Ensure that the time_init routine is run first.
         if len(self.cur_gal_objs) == 0:
             raise RuntimeError("Please run the time_init routine first before attempting to run this one.")
+        
+        # Update the drawImage kwargs with the right arguments
+        # the rng keyword argument only necessary and only works 
+        # if the method is "phot". So we only add that kwarg if it has been
+        # determined that the method is "phot".
+        drawImage_kwargs["method"] = method
+        if method == "phot":
+            drawImage_kwargs["rng"] = self.rng            
 
         for gal_ind, gal in enumerate(self.cur_gal_objs):
             convolved_img_final = galsim.Convolve([gal, self.cur_psf_obj])
 
-            img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng, **drawImage_kwargs)
+            img, draw_img_time = timeit(convolved_img_final.drawImage) (**drawImage_kwargs)
 
             # Obtaining the size of the image that GalSim is drawing.
             image_size = self.kimage_size(convolved_img_final, drawImage_kwargs["scale"])
@@ -430,7 +448,7 @@ class Timer:
         self.compute_draw_time_linear_regression(self.flux_scale[1:], self.final_times[1:])
 
 
-    def save_phot_shoot_images(self, directory="", save=True, show=False):
+    def save_phot_shoot_images(self, directory:str="", save=True, show=False):
         """
         If this function is called after compute_phot_draw_images,
         then it saves all the generated images to a directory in 
@@ -443,9 +461,14 @@ class Timer:
         # should not change.
         root = pathlib.Path(__file__).parent.parent.resolve() 
 
+        # Directory is passed into os.path.join, so ensure that directory
+        # is of type tuple.
+        if not isinstance(directory, str):
+            raise ValueError("Parameter directory must be of type str.")
+
         default_dir = os.path.join(root, "experiments", "generated_images")
 
-        save_dir = default_dir if directory == "" else directory
+        save_dir = default_dir if not directory else directory
 
         if not os.path.isdir(save_dir):
             os.mkdir(save_dir)
@@ -562,18 +585,19 @@ class Timer:
         """
         This routine simply returns the default parameters for the drawImage routine
         when using drawImage with a specific psf and a galaxy. At least one of the
-        kwargs must be populated.
+        kwargs must be populated. We deepcopy each dictionary so that if we modify
+        it, we aren't modifying the constant defaults.
         """
         if psf:
-            return Timer.DRAWIMAGE_DEFAULT_PARAMS["psfs"][psf]
+            return copy.deepcopy(Timer.DRAWIMAGE_DEFAULT_PARAMS)["psfs"][psf]
         elif galaxy:
-            return Timer.DRAWIMAGE_DEFAULT_PARAMS["galaxies"][galaxy]
+            return copy.deepcopy(Timer.DRAWIMAGE_DEFAULT_PARAMS)["galaxies"][galaxy]
         elif psf and galaxy:
             consolidated = dict()
             for psf_key in Timer.DRAWIMAGE_DEFAULT_PARAMS[psf]:
                 for gal_key in Timer.DRAWIMAGE_DEFAULT_PARAMS[galaxy]:
-                    consolidated[psf_key] = Timer.DRAWIMAGE_DEFAULT_PARAMS["psfs"][psf][psf_key]
-                    consolidated[gal_key] = Timer.DRAWIMAGE_DEFAULT_PARAMS["galaxies"][galaxy][gal_key]
+                    consolidated[psf_key] = copy.deepcopy(Timer.DRAWIMAGE_DEFAULT_PARAMS)["psfs"][psf][psf_key]
+                    consolidated[gal_key] = copy.deepcopy(Timer.DRAWIMAGE_DEFAULT_PARAMS)["galaxies"][galaxy][gal_key]
 
             return consolidated
         else:

@@ -146,10 +146,11 @@ cython_debug/
 examples/
 
 # saved images
-experiments/experiment_plots/
+experiments/results/
 
 # binaries
 *.zip
+*.png
 
 # Misc
 Experiments.ipynb

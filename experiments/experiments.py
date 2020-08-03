@@ -4,17 +4,40 @@ import numpy as np
 import galsim
 from scipy import stats
 import os
+from pathlib import Path
 
 class Experiment:
     """
     This class will store all the experiments.
     """
 
-    def __init__(self, save=True, show=False):
+    def __init__(self, save=True, show=False, exp_dat_dir="", 
+                 default_flux_range=None):
+
         self.save = save
         self.show = show
+        self.exp_dat_dir = exp_dat_dir
+        self.cwd = os.getcwd()
 
-    def time_phot_shooting_vs_gal_size(self):
+        # Define the save locations for all the plots and the images.
+        self.plot_save_dir = os.path.join(
+            self.cwd,
+            "results",
+            self.exp_dat_dir, 
+            "experiment_plots"
+        )
+
+        self.img_save_dir = os.path.join(
+            self.cwd,
+            "results",
+            self.exp_dat_dir,
+            "generated_images"
+        )
+
+        self.default_flux_range = default_flux_range
+
+
+    def time_vs_flux_on_gal_size(self, method="phot"):
         """
         experiment_1
         Experiment: Time to do photon shooting while varying the galaxy
@@ -48,10 +71,10 @@ class Experiment:
             params = Timer.GALAXY_CONSTRUCTOR_DEFAULT_PARAMS[galaxy]
             params["half_light_radius"] = r
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3), **params)
+            t = Timer(galaxy, flux_range=self.default_flux_range, **params)
             t.time_init()
             t.set_psf(psf)
-            t.compute_phot_draw_times()
+            t.compute_phot_draw_times(method=method)
             best_fit_equations.append(t.draw_time_line_annotation)
 
             t.plot_init_times(axis=init_ax)
@@ -74,7 +97,7 @@ class Experiment:
             self.save_figure(fig, 1)
 
 
-    def time_phot_shooting_vs_gal_shape(self):
+    def time_vs_flux_on_gal_shape(self, method="phot"):
         """
         experiment_2
         Experiment: Measure the time to do photon shooting while varying the galaxy
@@ -105,7 +128,7 @@ class Experiment:
         galaxy, psf = "sersic", "kolmogorov"
 
         for gal_q in gal_qs:
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
             t.plot_init_times(axis=init_axis)
 
@@ -118,7 +141,7 @@ class Experiment:
             t.cur_gal_objs = mod_gal_objs
 
             t.set_psf(psf)
-            t.compute_phot_draw_times()
+            t.compute_phot_draw_times(method=method)
             
             best_fit_line_equations.append(t.draw_time_line_annotation)
 
@@ -142,7 +165,7 @@ class Experiment:
             self.save_figure(fig, 2)
 
 
-    def time_phot_shooting_vs_profile(self):
+    def time_vs_flux_on_profile(self, method="phot"):
         """
         experiment_3
         Experiment: Measure the time to do photon shooting vs. flux while varying
@@ -169,12 +192,12 @@ class Experiment:
         best_fit_line_equations = []
 
         for gal_name in Timer.GALAXY_NAMES:
-            t = Timer(gal_name, flux_range=(1.e1, 1.e3))
+            t = Timer(gal_name, flux_range=self.default_flux_range)
             t.time_init()
             t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf)
-            t.compute_phot_draw_times()
+            t.compute_phot_draw_times(method=method)
 
             t.plot_draw_times(axis=draw_axis)
             best_fit_line_equations.append(t.draw_time_line_annotation)
@@ -204,7 +227,7 @@ class Experiment:
         if self.save:
             self.save_figure(fig, 3)
     
-    def time_phot_shooting_vs_psf(self):
+    def time_vs_flux_on_psf(self, method="phot"):
         """
         experiment_4
         Experiment: Measure the time to do photon shooting vs. flux while varying the PSF.
@@ -229,14 +252,14 @@ class Experiment:
         lines = []
 
         for psf in Timer.PSFS:
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
 
             t.time_init()
             t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf)
 
-            t.compute_phot_draw_times()
+            t.compute_phot_draw_times(method=method)
             lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
@@ -258,7 +281,7 @@ class Experiment:
             self.save_figure(fig, 4)
 
 
-    def time_phot_shooting_vs_optical_psf_params(self):
+    def time_vs_flux_on_optical_psf_params(self, method="phot"):
         """
         experiment_5
         Experiment: Measure the time to do photon shooting vs. flux by varying various parameters of the Optical PSF.
@@ -314,14 +337,14 @@ class Experiment:
             params = Timer.get_PSF_default_params(psf)
             params["aberrations"] = aberrations
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf, **params)
 
-            t.compute_phot_draw_times()
+            t.compute_phot_draw_times(method=method)
             lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
@@ -352,7 +375,7 @@ class Experiment:
             self.save_figure(fig, 5)
 
 
-    def time_phot_shooting_vs_optical_psf_vary_obscuration(self):
+    def time_vs_flux_on_optical_psf_vary_obscuration(self, method="phot"):
         """
         experiment_6
         Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
@@ -388,14 +411,14 @@ class Experiment:
             params = Timer.get_PSF_default_params(psf)
             params["obscuration"] = obscuration
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf, **params)
 
-            t.compute_phot_draw_times()
+            t.compute_phot_draw_times(method=method)
             lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
@@ -415,7 +438,7 @@ class Experiment:
             self.save_figure(fig, 6)
 
 
-    def time_phot_shooting_vs_optical_psf_vary_lam_over_diam(self):
+    def time_vs_flux_on_optical_psf_vary_lam_over_diam(self, method="phot"):
         """
         experiment_7
         Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
@@ -461,14 +484,14 @@ class Experiment:
             del params["diam"]
             params["lam_over_diam"] = lam_over_diam
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf, **params)
 
-            t.compute_phot_draw_times()
+            t.compute_phot_draw_times(method=method)
             lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
@@ -488,7 +511,7 @@ class Experiment:
             self.save_figure(fig, 7)
 
 
-    def fft_image_size_vs_flux_vary_lam_over_diam(self):
+    def fft_image_size_vs_flux_vary_lam_over_diam(self, method="phot"):
         """
         experiment_8
         Experiment: Determine relationship of lam_over_diam parameter to image size.
@@ -547,12 +570,12 @@ class Experiment:
             del params["diam"]
             params["lam_over_diam"] = lam_over_diam
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.set_psf(psf, **params)
 
-            t.compute_phot_draw_times()
+            t.compute_phot_draw_times(method=method)
             lines.append(t.draw_time_line_annotation)
 
             img_sizes = [img[1]["image_size"] for img in t.rendered_images]
@@ -565,7 +588,7 @@ class Experiment:
             avg_img_sizes.append(avg_img_size)
             img_size_std_devs.append(img_size_std_dev)
 
-            t.save_phot_shoot_images()
+            t.save_phot_shoot_images(directory=self.img_save_dir)
 
             print("%d/%d" % (ctr+1, len(lam_over_diams)))
             
@@ -583,6 +606,18 @@ class Experiment:
             self.save_figure(fig, 8)
 
 
+    def run_all(self, method="phot"):
+        self.time_vs_flux_on_gal_size(method=method)
+        self.time_vs_flux_on_gal_shape(method=method)
+        self.time_vs_flux_on_profile(method=method)
+        self.time_vs_flux_on_psf(method=method)
+        self.time_vs_flux_on_optical_psf_params(method=method)
+        self.time_vs_flux_on_optical_psf_vary_obscuration(method=method)
+        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method=method)
+        self.fft_image_size_vs_flux_vary_lam_over_diam(method=method)
+        self.get_PSF_FWHM()
+
+
 
     def get_PSF_FWHM(self):
         """
@@ -595,7 +630,7 @@ class Experiment:
         galaxy = "sersic"
         for psf in Timer.PSFS:
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.set_psf(psf)
@@ -607,12 +642,12 @@ class Experiment:
         """
         This saves the image to the ./experiment_results directory as a PNG.
         """
-        cwd = os.getcwd()
-        save_dir = os.path.join(cwd, "experiment_plots")
+        save_dir = self.plot_save_dir
 
         # Make the directory if it is not already there.
         if not os.path.isdir(save_dir):
-            os.mkdir(save_dir)
+            path = Path(save_dir)
+            path.mkdir(parents=True)
         
         filename = "experiment_%d.png" % experiment_number
         save_loc = os.path.join(save_dir, filename)
@@ -627,16 +662,16 @@ class Experiment:
         
 
 def main():
-    e = Experiment()
-    e.time_phot_shooting_vs_gal_size()
-    e.time_phot_shooting_vs_gal_shape()
-    e.time_phot_shooting_vs_profile()
-    e.time_phot_shooting_vs_psf()
-    e.time_phot_shooting_vs_optical_psf_params()
-    e.time_phot_shooting_vs_optical_psf_vary_obscuration()
-    e.time_phot_shooting_vs_optical_psf_vary_lam_over_diam()
-    e.fft_image_size_vs_flux_vary_lam_over_diam()
-    e.get_PSF_FWHM()
+    e = Experiment(exp_dat_dir="flux_v_time_phot_shooting_dat_entire_flux_range")
+    e.run_all()
+
+    e1 = Experiment(exp_dat_dir="flux_v_time_fft_on_phot_shooting_experiments_entire_flux_range")
+    e1.run_all(method="fft")
+
+    e2 = Experiment(exp_dat_dir="flux_v_time_phot_shooting_dat_10_3_max_flux",
+                    default_flux_range=(1.e1, 1.e3))
+    e2.run_all()
+
 
 if __name__ == "__main__":
     main()
