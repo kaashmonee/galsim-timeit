@@ -150,6 +150,7 @@ experiments/results/
 
 # binaries
 *.zip
+*.png
 
 # Misc
 Experiments.ipynb

@@ -257,7 +257,7 @@ class Timer:
         # in the loop
         temp_params = copy.deepcopy(self.default_gal_args)
 
-        for i, gal_flux in enumerate(self.flux_scale):
+        for gal_flux in enumerate(self.flux_scale):
             rand_offset = np.random.random_sample() / (1 / random_offset_range) if random_offset_range != 0 else 0
 
             temp_params["flux"] = gal_flux
