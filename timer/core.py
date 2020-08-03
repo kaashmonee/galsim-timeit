@@ -371,10 +371,14 @@ class Timer:
 
 
 
-    def compute_phot_draw_times(self, drawImage_kwargs:dict=None):
+    def compute_phot_draw_times(self, method="phot", drawImage_kwargs:dict=None):
         """
         Takes in a PSF and its parameters. If the **kwargs is left blank,
-        it uses a default set of parameters already defined. 
+        it uses a default set of parameters already defined. It also takes in 
+        a method optional kwarg. This is because this routine should be run 
+        in general with photon shooting, but we want to be able to run it with
+        FFTs so that we can confirm the flux independence of FFTs. So in certain
+        experiments, we will set method="fft".
         """
         try:
             logger.info("Computing draw times for the %s profile convolved with %s for %d flux levels." % (self.cur_gal_name, self.cur_psf_disp_name, self.cur_num_intervals))
@@ -408,7 +412,7 @@ class Timer:
         for gal_ind, gal in enumerate(self.cur_gal_objs):
             convolved_img_final = galsim.Convolve([gal, self.cur_psf_obj])
 
-            img, draw_img_time = timeit(convolved_img_final.drawImage) (method="phot", rng=self.rng, **drawImage_kwargs)
+            img, draw_img_time = timeit(convolved_img_final.drawImage) (method=method, rng=self.rng, **drawImage_kwargs)
 
             # Obtaining the size of the image that GalSim is drawing.
             image_size = self.kimage_size(convolved_img_final, drawImage_kwargs["scale"])
@@ -430,7 +434,7 @@ class Timer:
         self.compute_draw_time_linear_regression(self.flux_scale[1:], self.final_times[1:])
 
 
-    def save_phot_shoot_images(self, directory="", save=True, show=False):
+    def save_phot_shoot_images(self, directory:str="", save=True, show=False):
         """
         If this function is called after compute_phot_draw_images,
         then it saves all the generated images to a directory in 
@@ -443,9 +447,14 @@ class Timer:
         # should not change.
         root = pathlib.Path(__file__).parent.parent.resolve() 
 
+        # Directory is passed into os.path.join, so ensure that directory
+        # is of type tuple.
+        if not isinstance(directory, str):
+            raise ValueError("Parameter directory must be of type str.")
+
         default_dir = os.path.join(root, "experiments", "generated_images")
 
-        save_dir = default_dir if directory == "" else directory
+        save_dir = default_dir if not directory else directory
 
         if not os.path.isdir(save_dir):
             os.mkdir(save_dir)
