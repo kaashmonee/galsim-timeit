@@ -514,9 +514,9 @@ class Timer:
         axis.plot(self.flux_scale_disp, intercept + slope * self.flux_scale_disp, label=self.cur_gal_name)
 
         if self.cur_flux_scale == "log":
-            axis.set_xscale("log")
             axis.set_yscale("log")
-            axis.autoscale_view(tight=True)
+            axis.set_xscale("log")
+            axis.autoscale(enable=True)
 
         # If the user specifies an axis, this means they want to manage the plotting themselves.
         # We then do not want to call show() prematurely, because the user will be responsible for
@@ -579,6 +579,27 @@ class Timer:
         else:
             raise RuntimeError("At least psf or galaxy keywords must be populated.")
 
+    
+    @staticmethod
+    def get_PSF_default_params(psf):
+        """
+        A getter for returning the default parameters for a specific PSF.
+        This is done so we don't end up inadvertently modifying the default parameters
+        if they're used directly.
+        """
+        psf_defaults = copy.deepcopy(Timer.PSF_CONSTRUCTOR_DEFAULT_PARAMS)
+        return psf_defaults[psf]
+
+
+    @staticmethod
+    def get_galaxy_default_params(galaxy):
+        """
+        A getter for returning the default parameters for a specific galaxy.
+        This is done so we don't end up inadvertently modifying the default parameters
+        if they're used and modified directly.
+        """
+        galaxy_defaults = copy.deepcopy(Timer.GALAXY_CONSTRUCTOR_DEFAULT_PARAMS)
+        return galaxy_defaults[galaxy]
 
 
     def __repr__(self):
