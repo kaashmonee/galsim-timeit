@@ -11,7 +11,9 @@ class Experiment:
     This class will store all the experiments.
     """
 
-    def __init__(self, save=True, show=False, exp_dat_dir=""):
+    def __init__(self, save=True, show=False, exp_dat_dir="", 
+                 default_flux_range=None):
+
         self.save = save
         self.show = show
         self.exp_dat_dir = exp_dat_dir
@@ -31,6 +33,8 @@ class Experiment:
             self.exp_dat_dir,
             "generated_images"
         )
+
+        self.default_flux_range = default_flux_range
 
 
     def time_vs_flux_on_gal_size(self, method="phot"):
@@ -67,7 +71,7 @@ class Experiment:
             params = Timer.GALAXY_CONSTRUCTOR_DEFAULT_PARAMS[galaxy]
             params["half_light_radius"] = r
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3), **params)
+            t = Timer(galaxy, flux_range=self.default_flux_range, **params)
             t.time_init()
             t.set_psf(psf)
             t.compute_phot_draw_times(method=method)
@@ -124,7 +128,7 @@ class Experiment:
         galaxy, psf = "sersic", "kolmogorov"
 
         for gal_q in gal_qs:
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
             t.plot_init_times(axis=init_axis)
 
@@ -188,7 +192,7 @@ class Experiment:
         best_fit_line_equations = []
 
         for gal_name in Timer.GALAXY_NAMES:
-            t = Timer(gal_name, flux_range=(1.e1, 1.e3))
+            t = Timer(gal_name, flux_range=self.default_flux_range)
             t.time_init()
             t.plot_init_times(axis=init_axis)
 
@@ -248,7 +252,7 @@ class Experiment:
         lines = []
 
         for psf in Timer.PSFS:
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
 
             t.time_init()
             t.plot_init_times(axis=init_axis)
@@ -333,7 +337,7 @@ class Experiment:
             params = Timer.get_PSF_default_params(psf)
             params["aberrations"] = aberrations
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
@@ -407,7 +411,7 @@ class Experiment:
             params = Timer.get_PSF_default_params(psf)
             params["obscuration"] = obscuration
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
@@ -480,7 +484,7 @@ class Experiment:
             del params["diam"]
             params["lam_over_diam"] = lam_over_diam
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.plot_init_times(axis=init_axis)
@@ -566,7 +570,7 @@ class Experiment:
             del params["diam"]
             params["lam_over_diam"] = lam_over_diam
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.set_psf(psf, **params)
@@ -602,8 +606,20 @@ class Experiment:
             self.save_figure(fig, 8)
 
 
+    def run_all(self, method="phot"):
+        self.time_vs_flux_on_gal_size(method=method)
+        self.time_vs_flux_on_gal_shape(method=method)
+        self.time_vs_flux_on_profile(method=method)
+        self.time_vs_flux_on_psf(method=method)
+        self.time_vs_flux_on_optical_psf_params(method=method)
+        self.time_vs_flux_on_optical_psf_vary_obscuration(method=method)
+        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method=method)
+        self.fft_image_size_vs_flux_vary_lam_over_diam(method=method)
+        self.get_PSF_FWHM()
 
-    def get_PSF_FWHM(self, method="phot"):
+
+
+    def get_PSF_FWHM(self):
         """
         experiment_9
         This function just outputs the FWHM values for each PSF.
@@ -614,7 +630,7 @@ class Experiment:
         galaxy = "sersic"
         for psf in Timer.PSFS:
 
-            t = Timer(galaxy, flux_range=(1.e1, 1.e3))
+            t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
             t.set_psf(psf)
@@ -646,16 +662,16 @@ class Experiment:
         
 
 def main():
-    e = Experiment(exp_dat_dir="phot_shooting_dat")
-    e.time_vs_flux_on_gal_size()
-    e.time_vs_flux_on_gal_shape()
-    e.time_vs_flux_on_profile()
-    e.time_vs_flux_on_psf()
-    e.time_vs_flux_on_optical_psf_params()
-    e.time_vs_flux_on_optical_psf_vary_obscuration()
-    e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
-    e.fft_image_size_vs_flux_vary_lam_over_diam()
-    e.get_PSF_FWHM()
+    e = Experiment(exp_dat_dir="flux_v_time_phot_shooting_dat_entire_flux_range")
+    e.run_all()
+
+    e1 = Experiment(exp_dat_dir="flux_v_time_fft_on_phot_shooting_experiments_entire_flux_range")
+    e1.run_all(method="fft")
+
+    e2 = Experiment(exp_dat_dir="flux_v_time_phot_shooting_dat_10_3_max_flux",
+                    default_flux_range=(1.e1, 1.e3))
+    e2.run_all()
+
 
 if __name__ == "__main__":
     main()

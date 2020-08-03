@@ -153,7 +153,8 @@ class Timer:
     }
 
 
-    def __init__(self, galaxy, flux_range:tuple=(1.e1, 1.e5), num_intervals=15, debug=False, scale="log", **kwargs):
+    def __init__(self, galaxy, flux_range:tuple=None, num_intervals=15, 
+                 debug=False, scale="log", **kwargs):
         """
         Timer object constructor. Takes in a type of galaxy and the flux range
         to vary. The flux range is a tuple that takes in the min flux and the max flux.
@@ -161,6 +162,11 @@ class Timer:
         """
         # Setting the galaxy
         self.set_galaxy(galaxy, **kwargs)
+
+        # Set the default flux range
+        default_flux_range = (1.e1, 1.e5)
+        if flux_range is None:
+            flux_range = default_flux_range
 
         # Starting and ending indices
         (self.start, self.end) = flux_range
@@ -408,11 +414,19 @@ class Timer:
         # Ensure that the time_init routine is run first.
         if len(self.cur_gal_objs) == 0:
             raise RuntimeError("Please run the time_init routine first before attempting to run this one.")
+        
+        # Update the drawImage kwargs with the right arguments
+        # the rng keyword argument only necessary and only works 
+        # if the method is "phot". So we only add that kwarg if it has been
+        # determined that the method is "phot".
+        drawImage_kwargs["method"] = method
+        if method == "phot":
+            drawImage_kwargs["rng"] = self.rng            
 
         for gal_ind, gal in enumerate(self.cur_gal_objs):
             convolved_img_final = galsim.Convolve([gal, self.cur_psf_obj])
 
-            img, draw_img_time = timeit(convolved_img_final.drawImage) (method=method, rng=self.rng, **drawImage_kwargs)
+            img, draw_img_time = timeit(convolved_img_final.drawImage) (**drawImage_kwargs)
 
             # Obtaining the size of the image that GalSim is drawing.
             image_size = self.kimage_size(convolved_img_final, drawImage_kwargs["scale"])
@@ -571,18 +585,19 @@ class Timer:
         """
         This routine simply returns the default parameters for the drawImage routine
         when using drawImage with a specific psf and a galaxy. At least one of the
-        kwargs must be populated.
+        kwargs must be populated. We deepcopy each dictionary so that if we modify
+        it, we aren't modifying the constant defaults.
         """
         if psf:
-            return Timer.DRAWIMAGE_DEFAULT_PARAMS["psfs"][psf]
+            return copy.deepcopy(Timer.DRAWIMAGE_DEFAULT_PARAMS)["psfs"][psf]
         elif galaxy:
-            return Timer.DRAWIMAGE_DEFAULT_PARAMS["galaxies"][galaxy]
+            return copy.deepcopy(Timer.DRAWIMAGE_DEFAULT_PARAMS)["galaxies"][galaxy]
         elif psf and galaxy:
             consolidated = dict()
             for psf_key in Timer.DRAWIMAGE_DEFAULT_PARAMS[psf]:
                 for gal_key in Timer.DRAWIMAGE_DEFAULT_PARAMS[galaxy]:
-                    consolidated[psf_key] = Timer.DRAWIMAGE_DEFAULT_PARAMS["psfs"][psf][psf_key]
-                    consolidated[gal_key] = Timer.DRAWIMAGE_DEFAULT_PARAMS["galaxies"][galaxy][gal_key]
+                    consolidated[psf_key] = copy.deepcopy(Timer.DRAWIMAGE_DEFAULT_PARAMS)["psfs"][psf][psf_key]
+                    consolidated[gal_key] = copy.deepcopy(Timer.DRAWIMAGE_DEFAULT_PARAMS)["galaxies"][galaxy][gal_key]
 
             return consolidated
         else:
