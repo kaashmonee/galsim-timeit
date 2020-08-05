@@ -257,7 +257,7 @@ class Timer:
         # in the loop
         temp_params = copy.deepcopy(self.default_gal_args)
 
-        for gal_flux in enumerate(self.flux_scale):
+        for gal_flux in self.flux_scale:
             rand_offset = np.random.random_sample() / (1 / random_offset_range) if random_offset_range != 0 else 0
 
             temp_params["flux"] = gal_flux
@@ -274,6 +274,7 @@ class Timer:
             else:
                 temp_params["half_light_radius"] += rand_offset
 
+            print("temp_params:", temp_params)
             gal, time_gal = timeit(self.cur_gal_name_constructor, min_of_n=repeat)(**temp_params)
             
             self.init_times.append(time_gal)
