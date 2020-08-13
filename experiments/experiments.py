@@ -37,11 +37,12 @@ class Experiment:
         self.default_flux_range = default_flux_range
 
 
-    def time_vs_flux_on_gal_size(self, method="phot"):
+    def time_vs_flux_on_gal_size(self, method="phot", plot:tuple=None):
         """
         experiment_1
         Experiment: Time to do photon shooting while varying the galaxy
-        size and shape and keeping flux constant.
+        size and shape and keeping flux constant. plot is an input variable
+        that takes in 2tuple that should contain a (fig, axes:tuple).
 
         Expected Results: should not expect a significant change between runs
 
@@ -57,7 +58,11 @@ class Experiment:
 
         half_light_radii = np.linspace(0.5, 1.5, 5)
 
-        fig, axs = plt.subplots(1, 2)
+        if plot is None:
+            fig, axs = plt.subplots(1, 2)
+        else:
+            (fig, axs) = plot
+
         init_ax = axs[0]
         draw_ax = axs[1]
 
@@ -97,7 +102,7 @@ class Experiment:
             self.save_figure(fig, 1)
 
 
-    def time_vs_flux_on_gal_shape(self, method="phot"):
+    def time_vs_flux_on_gal_shape(self, method="phot", plot:tuple=None):
         """
         experiment_2
         Experiment: Measure the time to do photon shooting while varying the galaxy
@@ -119,7 +124,11 @@ class Experiment:
         gal_qs = np.linspace(0.2, 1, 5)
         gal_beta = 23
 
-        fig, axs = plt.subplots(1, 2)
+        if plot is None:
+            fig, axs = plt.subplots(1, 2)
+        else:
+            (fig, axs) = plot
+
         init_axis = axs[0]
         draw_axis = axs[1]
 
@@ -165,7 +174,7 @@ class Experiment:
             self.save_figure(fig, 2)
 
 
-    def time_vs_flux_on_profile(self, method="phot"):
+    def time_vs_flux_on_profile(self, method="phot", plot:tuple=None):
         """
         experiment_3
         Experiment: Measure the time to do photon shooting vs. flux while varying
@@ -184,7 +193,11 @@ class Experiment:
               for each galaxy.
         """
 
-        fig, axs = plt.subplots(1, 2)
+        if plot is None:
+            fig, axs = plt.subplots(1, 2)
+        else:
+            (fig, axs) = plot
+
         init_axis = axs[0]
         draw_axis = axs[1]
         psf = "kolmogorov"
@@ -227,7 +240,7 @@ class Experiment:
         if self.save:
             self.save_figure(fig, 3)
     
-    def time_vs_flux_on_psf(self, method="phot"):
+    def time_vs_flux_on_psf(self, method="phot", plot:tuple=None):
         """
         experiment_4
         Experiment: Measure the time to do photon shooting vs. flux while varying the PSF.
@@ -243,7 +256,10 @@ class Experiment:
             - Plot instantiation time and convolution time for each flux value on different convolutions
               with different PSFs.
         """
-        fig, axs = plt.subplots(1, 2)
+        if plot is None:
+            fig, axs = plt.subplots(1, 2)
+        else:
+            (fig, axs) = plot
 
         init_axis = axs[0]
         draw_axis = axs[1]
@@ -281,7 +297,7 @@ class Experiment:
             self.save_figure(fig, 4)
 
 
-    def time_vs_flux_on_optical_psf_params(self, method="phot"):
+    def time_vs_flux_on_optical_psf_params(self, method="phot", plot:tuple=None):
         """
         experiment_5
         Experiment: Measure the time to do photon shooting vs. flux by varying various parameters of the Optical PSF.
@@ -322,7 +338,10 @@ class Experiment:
             spherical
         ]
 
-        fig, axs = plt.subplots(1, 2)
+        if plot is None:
+            fig, axs = plt.subplots(1, 2)
+        else:
+            (fig, axs) = plot
 
         init_axis = axs[0]
         draw_axis = axs[1]
@@ -375,7 +394,7 @@ class Experiment:
             self.save_figure(fig, 5)
 
 
-    def time_vs_flux_on_optical_psf_vary_obscuration(self, method="phot"):
+    def time_vs_flux_on_optical_psf_vary_obscuration(self, method="phot", plot:tuple=None):
         """
         experiment_6
         Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
@@ -394,7 +413,10 @@ class Experiment:
               for 2 different lam_over_diam parameters.
         """
 
-        fig, axs = plt.subplots(1, 2)
+        if plot is None:
+            fig, axs = plt.subplots(1, 2)
+        else:
+            (fig, axs) = plot
 
         init_axis = axs[0]
         draw_axis = axs[1]
@@ -438,7 +460,7 @@ class Experiment:
             self.save_figure(fig, 6)
 
 
-    def time_vs_flux_on_optical_psf_vary_lam_over_diam(self, method="phot"):
+    def time_vs_flux_on_optical_psf_vary_lam_over_diam(self, method="phot", plot:tuple=None):
         """
         experiment_7
         Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
@@ -455,7 +477,10 @@ class Experiment:
             - Plot instantiation time and convolution time for each flux value on different convolutions
               for 2 different lam_over_diam parameters.
         """                
-        fig, axs = plt.subplots(1, 2)
+        if plot is None:
+            fig, axs = plt.subplots(1, 2)
+        else:
+            (fig, axs) = plot
 
         init_axis = axs[0]
         draw_axis = axs[1]
@@ -511,7 +536,7 @@ class Experiment:
             self.save_figure(fig, 7)
 
 
-    def fft_image_size_vs_flux_vary_lam_over_diam(self, method="phot"):
+    def fft_image_size_vs_flux_vary_lam_over_diam(self, method="phot", plot:tuple=None):
         """
         experiment_8
         Experiment: Determine relationship of lam_over_diam parameter to image size.
@@ -530,7 +555,10 @@ class Experiment:
             - Plot image size vs. flux.
         """
 
-        fig, [ax, ax2] = plt.subplots(1, 2)
+        if plot is None:
+            fig, [ax, ax2] = plt.subplots(1, 2)
+        else:
+            (fig, [ax, ax2]) = plot
 
         galaxy = "point"
         psf = "optical"
@@ -618,6 +646,54 @@ class Experiment:
         self.get_PSF_FWHM()
 
 
+    def run_fft_times_on_changing_flux(self):
+
+        plots = [plt.subplots(1, 2) for _ in range(8)]
+
+        # experiment_1 
+        self.save = False
+        self.time_vs_flux_on_gal_size(method="phot", plot=plots[0])
+        self.save = True
+        self.time_vs_flux_on_gal_size(method="fft", plot=plots[0])
+
+        # experiment_2
+        self.save = False
+        self.time_vs_flux_on_gal_shape(method="phot", plot=plots[1])
+        self.save = True
+        self.time_vs_flux_on_gal_shape(method="fft", plot=plots[1])
+
+        # experiment_3
+        self.save = False
+        self.time_vs_flux_on_profile(method="phot", plot=plots[2])
+        self.save = True
+        self.time_vs_flux_on_profile(method="fft", plot=plots[2])
+
+        # experiment_4
+        self.save = False
+        self.time_vs_flux_on_psf(method="phot", plot=plots[3])
+        self.save = True
+        self.time_vs_flux_on_psf(method="fft", plot=plots[3])
+
+        # experiment_5
+        self.save = False
+        self.time_vs_flux_on_optical_psf_params(method="phot", plot=plots[4])
+        self.save = True
+        self.time_vs_flux_on_optical_psf_params(method="fft", plot=plots[4])
+
+        # experiment_6
+        self.save = False
+        self.time_vs_flux_on_optical_psf_vary_obscuration(method="phot", plot=plots[5])
+        self.save = True
+        self.time_vs_flux_on_optical_psf_vary_obscuration(method="fft", plot=plots[5])
+
+        # experiment_7
+        self.save = False
+        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method="phot", plot=plots[6])
+        self.save = True
+        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method="fft", plot=plots[6])
+
+
+
 
     def get_PSF_FWHM(self):
         """
@@ -659,18 +735,20 @@ class Experiment:
 
         print("Saving %s" % filename)
 
+
         
 
 def main():
-    e = Experiment(exp_dat_dir="flux_v_time_phot_shooting_dat_entire_flux_range")
-    e.run_all()
+    e = Experiment(exp_dat_dir="testing_horizontals")
+    e.run_fft_times_on_changing_flux()
+    # e.run_all()
 
-    e1 = Experiment(exp_dat_dir="flux_v_time_fft_on_phot_shooting_experiments_entire_flux_range")
-    e1.run_all(method="fft")
+    # e1 = Experiment(exp_dat_dir="flux_v_time_fft_on_phot_shooting_experiments_entire_flux_range")
+    # e1.run_all(method="fft")
 
-    e2 = Experiment(exp_dat_dir="flux_v_time_phot_shooting_dat_10_3_max_flux",
-                    default_flux_range=(1.e1, 1.e3))
-    e2.run_all()
+    # e2 = Experiment(exp_dat_dir="flux_v_time_phot_shooting_dat_10_3_max_flux",
+    #                 default_flux_range=(1.e1, 1.e3))
+    # e2.run_all()
 
 
 if __name__ == "__main__":
