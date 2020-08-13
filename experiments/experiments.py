@@ -376,23 +376,25 @@ class Experiment:
             t.plot_draw_times(axis=draw_axis)
 
 
-        legend_labels.extend([
+        temp_labels = [
             "none",
             "defocus=%f" % defocus[4],
             "astigmatism=%f,%f" % (astigmatism[5], astigmatism[6]),
             "coma=%f,%f" % (coma[7], coma[8]),
             "spherical=%f" % spherical[11]
-        ])
-        legend_labels = [label + " %s" % method for label in legend_labels]
+        ]
+        temp_labels = [label + " %s" % method for label in temp_labels]
+
 
         title1 = "Time for Photon Shooting vs. Flux with Sersic Profile Convolved with Optical PSF"
 
         axs[1].set_title(title1)
 
+        temp_labels = [label + "\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
+
+        legend_labels.extend(temp_labels)
+
         axs[0].legend(legend_labels)
-
-        legend_labels = [label + "\n%s" % annot for (label, annot) in zip(legend_labels, lines)]
-
         axs[1].legend(legend_labels)
 
         if self.show:
@@ -454,11 +456,14 @@ class Experiment:
             t.plot_draw_times(axis=draw_axis)
 
 
-        legend_labels.extend(["obscuration = %f %s" % (o, method) for o in obscurations])
+        temp_labels = ["obscuration = %f %s" % (o, method) for o in obscurations]
 
         init_axis.legend(legend_labels)
 
-        legend_labels = [label+"\n%s" % annot for (label, annot) in zip(legend_labels, lines)]
+        temp_labels = [label+"\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
+
+        legend_labels.extend(temp_labels)
+
         draw_axis.legend(legend_labels)
 
         if self.show:
@@ -530,11 +535,14 @@ class Experiment:
             t.plot_draw_times(axis=draw_axis)
 
 
-        legend_labels.extend(["lam_over_diam = %f arcsecs %s" % (lod, method) for lod in lam_over_diams])
+        temp_labels = ["lam_over_diam = %f arcsecs %s" % (lod, method) for lod in lam_over_diams]
+
+
+        temp_labels = [label+"\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
+
+        legend_labels.extend(temp_labels)
 
         init_axis.legend(legend_labels)
-
-        legend_labels = [label+"\n%s" % annot for (label, annot) in zip(legend_labels, lines)]
         draw_axis.legend(legend_labels)
 
         if self.show:
@@ -704,24 +712,24 @@ class PhotonAndFFTPlottingExperiment(Experiment):
         plots = [plt.subplots(1, 2) for _ in range(8)]
 
         # experiment_1 
-        # self.save = False
-        # self.time_vs_flux_on_gal_size(method="phot", plot=plots[0])
-        # labels = get_axis_legend_labels(plots[0][1][1])
-        # self.save = True
-        # self.time_vs_flux_on_gal_size(method="fft", plot=plots[0], legend_labels=labels)
+        self.save = False
+        self.time_vs_flux_on_gal_size(method="phot", plot=plots[0])
+        labels = get_axis_legend_labels(plots[0][1][1])
+        self.save = True
+        self.time_vs_flux_on_gal_size(method="fft", plot=plots[0], legend_labels=labels)
 
-        # # experiment_2
-        # self.save = False
-        # self.time_vs_flux_on_gal_shape(method="phot", plot=plots[1])
-        # labels = get_axis_legend_labels(plots[1][1][1])
-        # self.save = True
-        # self.time_vs_flux_on_gal_shape(method="fft", plot=plots[1], legend_labels=labels)
+        # experiment_2
+        self.save = False
+        self.time_vs_flux_on_gal_shape(method="phot", plot=plots[1])
+        labels = get_axis_legend_labels(plots[1][1][1])
+        self.save = True
+        self.time_vs_flux_on_gal_shape(method="fft", plot=plots[1], legend_labels=labels)
 
-        # # experiment_3
-        # self.save = False
-        # self.time_vs_flux_on_profile(method="phot", plot=plots[2])
-        # self.save = True
-        # self.time_vs_flux_on_profile(method="fft", plot=plots[2])
+        # experiment_3
+        self.save = False
+        self.time_vs_flux_on_profile(method="phot", plot=plots[2])
+        self.save = True
+        self.time_vs_flux_on_profile(method="fft", plot=plots[2])
 
         # experiment_4
         self.save = False
