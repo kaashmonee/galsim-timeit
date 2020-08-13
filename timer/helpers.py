@@ -32,3 +32,14 @@ def timeit(func, min_of_n : int = 3):
         return res, min_time
 
     return timeit_wrapper
+
+
+def get_axis_legend_labels(axis):
+    """
+    A simple wrapper to an alread existing matplotlib routine to make obtaining
+    axis legends easier.
+    This is done because of the way get_legend_handles_lables() returns.
+    It first produces a tuple where the first element is a list of matplotlib.lines.Line2D objects
+    The 2nd element is a list of the legend labels. 
+    """
+    return [text.get_text() for text in axis.get_legend().texts]
