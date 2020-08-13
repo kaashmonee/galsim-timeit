@@ -85,10 +85,22 @@ class Experiment:
             t.time_init()
             t.set_psf(psf)
             t.compute_phot_draw_times(method=method)
+
             best_fit_equations.append(t.draw_time_line_annotation)
+            # algorithm:
+            # run t.compute_phot_draw_times(method="fft")
+            # - get the fft times
+            #   - compute the average and std deviation
+            # - compute the image size
+            # - add the fft average time to a list of average times
+            # - add the fft std dev to a list of std dev times
+            # - add the image size to a list of image times
 
             t.plot_init_times(axis=init_ax)
             t.plot_draw_times(axis=draw_ax)
+
+        # plot the image times vs image size using the std dev list as the 
+        # error bars
 
         legend_labels.extend(["r = %f\n%s %s" % (r, annotation, method) for (r, annotation) in zip(half_light_radii, best_fit_equations)])
 
@@ -758,7 +770,8 @@ class PhotonAndFFTPlottingExperiment(Experiment):
         labels = get_axis_legend_labels(plots[6][1][1])
         self.save = True
         self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method="fft", plot=plots[6], legend_labels=labels)
-        
+
+
 
 def main():
     e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
