@@ -1,10 +1,15 @@
 from timer import Timer
+from timer.helpers import get_axis_legend_labels
 import matplotlib.pyplot as plt
 import numpy as np
 import galsim
 from scipy import stats
 import os
 from pathlib import Path
+
+# DEBUGGING TOOLS #
+import pdb
+# END DEBUGING TOOLS #
 
 class Experiment:
     """
@@ -37,7 +42,7 @@ class Experiment:
         self.default_flux_range = default_flux_range
 
 
-    def time_vs_flux_on_gal_size(self, method="phot", plot:tuple=None):
+    def time_vs_flux_on_gal_size(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
         experiment_1
         Experiment: Time to do photon shooting while varying the galaxy
@@ -85,7 +90,7 @@ class Experiment:
             t.plot_init_times(axis=init_ax)
             t.plot_draw_times(axis=draw_ax)
 
-        legend_labels = ["r = %f\n%s" % (r, annotation) for (r, annotation) in zip(half_light_radii, best_fit_equations)]
+        legend_labels.extend(["r = %f\n%s %s" % (r, annotation, method) for (r, annotation) in zip(half_light_radii, best_fit_equations)])
 
         title0 = axs[0].get_title() + "\nVarying half_light_radius"
         title1 = axs[1].get_title() + "\nVarying half_light_radius"
@@ -102,7 +107,7 @@ class Experiment:
             self.save_figure(fig, 1)
 
 
-    def time_vs_flux_on_gal_shape(self, method="phot", plot:tuple=None):
+    def time_vs_flux_on_gal_shape(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
         experiment_2
         Experiment: Measure the time to do photon shooting while varying the galaxy
@@ -156,7 +161,7 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
-        legend_labels = ["q = %f\n%s" % (q, annot) for (q, annot) in zip(gal_qs, best_fit_line_equations)]
+        legend_labels.extend(["q = %f\n%s %s" % (q, annot, method) for (q, annot) in zip(gal_qs, best_fit_line_equations)])
 
         title0 = axs[0].get_title() + "\nVarying q value (shear)"
         title1 = axs[1].get_title() + "\nVarying q value (shear)"
@@ -240,7 +245,7 @@ class Experiment:
         if self.save:
             self.save_figure(fig, 3)
     
-    def time_vs_flux_on_psf(self, method="phot", plot:tuple=None):
+    def time_vs_flux_on_psf(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
         experiment_4
         Experiment: Measure the time to do photon shooting vs. flux while varying the PSF.
@@ -280,14 +285,16 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
-        legend_labels = [psf for psf in Timer.PSFS]
+        temp_labels = [(psf+" %s" % method) for psf in Timer.PSFS]
         
         title1 = "Time vs. Photon Shooting for Sersic Profile Convolved with Various PSFs"
         axs[1].set_title(title1)
 
-        axs[0].legend(legend_labels)
+        temp_labels = [label+"\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
 
-        legend_labels = [label+"\n%s" % annot for (label, annot) in zip(legend_labels, lines)]
+        legend_labels.extend(temp_labels)
+
+        axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
 
         if self.show:
@@ -297,7 +304,7 @@ class Experiment:
             self.save_figure(fig, 4)
 
 
-    def time_vs_flux_on_optical_psf_params(self, method="phot", plot:tuple=None):
+    def time_vs_flux_on_optical_psf_params(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
         experiment_5
         Experiment: Measure the time to do photon shooting vs. flux by varying various parameters of the Optical PSF.
@@ -369,13 +376,14 @@ class Experiment:
             t.plot_draw_times(axis=draw_axis)
 
 
-        legend_labels = [
+        legend_labels.extend([
             "none",
             "defocus=%f" % defocus[4],
             "astigmatism=%f,%f" % (astigmatism[5], astigmatism[6]),
             "coma=%f,%f" % (coma[7], coma[8]),
             "spherical=%f" % spherical[11]
-        ]
+        ])
+        legend_labels = [label + " %s" % method for label in legend_labels]
 
         title1 = "Time for Photon Shooting vs. Flux with Sersic Profile Convolved with Optical PSF"
 
@@ -394,7 +402,7 @@ class Experiment:
             self.save_figure(fig, 5)
 
 
-    def time_vs_flux_on_optical_psf_vary_obscuration(self, method="phot", plot:tuple=None):
+    def time_vs_flux_on_optical_psf_vary_obscuration(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
         experiment_6
         Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
@@ -446,7 +454,7 @@ class Experiment:
             t.plot_draw_times(axis=draw_axis)
 
 
-        legend_labels = ["obscuration = %f" % o for o in obscurations]
+        legend_labels.extend(["obscuration = %f %s" % (o, method) for o in obscurations])
 
         init_axis.legend(legend_labels)
 
@@ -460,7 +468,7 @@ class Experiment:
             self.save_figure(fig, 6)
 
 
-    def time_vs_flux_on_optical_psf_vary_lam_over_diam(self, method="phot", plot:tuple=None):
+    def time_vs_flux_on_optical_psf_vary_lam_over_diam(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
         experiment_7
         Experiment: Measure the time to do photon shooting vs. flux while changing the lam_over_diam
@@ -522,7 +530,7 @@ class Experiment:
             t.plot_draw_times(axis=draw_axis)
 
 
-        legend_labels = ["lam_over_diam = %f arcsecs" % lod for lod in lam_over_diams]
+        legend_labels.extend(["lam_over_diam = %f arcsecs %s" % (lod, method) for lod in lam_over_diams])
 
         init_axis.legend(legend_labels)
 
@@ -646,55 +654,6 @@ class Experiment:
         self.get_PSF_FWHM()
 
 
-    def run_fft_times_on_changing_flux(self):
-
-        plots = [plt.subplots(1, 2) for _ in range(8)]
-
-        # experiment_1 
-        self.save = False
-        self.time_vs_flux_on_gal_size(method="phot", plot=plots[0])
-        self.save = True
-        self.time_vs_flux_on_gal_size(method="fft", plot=plots[0])
-
-        # experiment_2
-        self.save = False
-        self.time_vs_flux_on_gal_shape(method="phot", plot=plots[1])
-        self.save = True
-        self.time_vs_flux_on_gal_shape(method="fft", plot=plots[1])
-
-        # experiment_3
-        self.save = False
-        self.time_vs_flux_on_profile(method="phot", plot=plots[2])
-        self.save = True
-        self.time_vs_flux_on_profile(method="fft", plot=plots[2])
-
-        # experiment_4
-        self.save = False
-        self.time_vs_flux_on_psf(method="phot", plot=plots[3])
-        self.save = True
-        self.time_vs_flux_on_psf(method="fft", plot=plots[3])
-
-        # experiment_5
-        self.save = False
-        self.time_vs_flux_on_optical_psf_params(method="phot", plot=plots[4])
-        self.save = True
-        self.time_vs_flux_on_optical_psf_params(method="fft", plot=plots[4])
-
-        # experiment_6
-        self.save = False
-        self.time_vs_flux_on_optical_psf_vary_obscuration(method="phot", plot=plots[5])
-        self.save = True
-        self.time_vs_flux_on_optical_psf_vary_obscuration(method="fft", plot=plots[5])
-
-        # experiment_7
-        self.save = False
-        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method="phot", plot=plots[6])
-        self.save = True
-        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method="fft", plot=plots[6])
-
-
-
-
     def get_PSF_FWHM(self):
         """
         experiment_9
@@ -736,10 +695,65 @@ class Experiment:
         print("Saving %s" % filename)
 
 
+
+class PhotonAndFFTPlottingExperiment(Experiment):
+
+    def run_fft_times_on_changing_flux(self):
+        
+        # plots: (figure object * (ax1 * ax2 * ... * axn)) * ... *
+        plots = [plt.subplots(1, 2) for _ in range(8)]
+
+        # experiment_1 
+        # self.save = False
+        # self.time_vs_flux_on_gal_size(method="phot", plot=plots[0])
+        # labels = get_axis_legend_labels(plots[0][1][1])
+        # self.save = True
+        # self.time_vs_flux_on_gal_size(method="fft", plot=plots[0], legend_labels=labels)
+
+        # # experiment_2
+        # self.save = False
+        # self.time_vs_flux_on_gal_shape(method="phot", plot=plots[1])
+        # labels = get_axis_legend_labels(plots[1][1][1])
+        # self.save = True
+        # self.time_vs_flux_on_gal_shape(method="fft", plot=plots[1], legend_labels=labels)
+
+        # # experiment_3
+        # self.save = False
+        # self.time_vs_flux_on_profile(method="phot", plot=plots[2])
+        # self.save = True
+        # self.time_vs_flux_on_profile(method="fft", plot=plots[2])
+
+        # experiment_4
+        self.save = False
+        self.time_vs_flux_on_psf(method="phot", plot=plots[3])
+        labels = get_axis_legend_labels(plots[3][1][1])
+        self.save = True
+        self.time_vs_flux_on_psf(method="fft", plot=plots[3], legend_labels=labels)
+
+        # experiment_5
+        self.save = False
+        self.time_vs_flux_on_optical_psf_params(method="phot", plot=plots[4])
+        labels = get_axis_legend_labels(plots[4][1][1])
+        self.save = True
+        self.time_vs_flux_on_optical_psf_params(method="fft", plot=plots[4], legend_labels=labels)
+
+        # experiment_6
+        self.save = False
+        self.time_vs_flux_on_optical_psf_vary_obscuration(method="phot", plot=plots[5])
+        labels = get_axis_legend_labels(plots[5][1][1])
+        self.save = True
+        self.time_vs_flux_on_optical_psf_vary_obscuration(method="fft", plot=plots[5], legend_labels=labels)
+
+        # experiment_7
+        self.save = False
+        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method="phot", plot=plots[6])
+        labels = get_axis_legend_labels(plots[6][1][1])
+        self.save = True
+        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method="fft", plot=plots[6], legend_labels=labels)
         
 
 def main():
-    e = Experiment(exp_dat_dir="testing_horizontals")
+    e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
     e.run_fft_times_on_changing_flux()
     # e.run_all()
 
