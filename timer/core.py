@@ -391,6 +391,11 @@ class Timer:
             logger.info("Computing draw times for the %s profile convolved with %s for %d flux levels." % (self.cur_gal_name, self.cur_psf_disp_name, self.cur_num_intervals))
         except AttributeError as e:
             raise AttributeError(str(e) + "\nPlease set the psf first using set_psf.")
+
+        # This routine should be idempotent, so some objects need to be reset
+        # to maintain this idempotency.
+        self.rendered_images = []
+        self.final_times = []
         
 
         if self.debug:

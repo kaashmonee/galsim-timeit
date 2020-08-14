@@ -76,6 +76,10 @@ class Experiment:
         galaxy = "exponential"
         psf = "kolmogorov"
 
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
+
         for r in half_light_radii:
 
             params = Timer.GALAXY_CONSTRUCTOR_DEFAULT_PARAMS[galaxy]
@@ -87,6 +91,11 @@ class Experiment:
             t.compute_phot_draw_times(method=method)
 
             best_fit_equations.append(t.draw_time_line_annotation)
+
+
+            t.plot_init_times(axis=init_ax)
+            t.plot_draw_times(axis=draw_ax)
+
             # algorithm:
             # run t.compute_phot_draw_times(method="fft")
             # - get the fft times
@@ -96,11 +105,20 @@ class Experiment:
             # - add the fft std dev to a list of std dev times
             # - add the image size to a list of image times
 
-            t.plot_init_times(axis=init_ax)
-            t.plot_draw_times(axis=draw_ax)
+            fft_draw_stats = self.compute_fft_draw_time_stats(t)
+            fft_draw_times.append(fft_draw_stats["mean_draw_time"])
+            fft_draw_time_stdev.append(fft_draw_stats["draw_time_stdev"])
+            fft_image_sizes.append(fft_draw_stats["image_size"])
 
         # plot the image times vs image size using the std dev list as the 
         # error bars
+
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            1
+        )
 
         legend_labels.extend(["r = %f\n%s %s" % (r, annotation, method) for (r, annotation) in zip(half_light_radii, best_fit_equations)])
 
@@ -693,7 +711,7 @@ class Experiment:
             print("%s fwhm (arcseconds): %f" % (psf, t.cur_psf_obj.calculateFWHM()))
 
 
-    def save_figure(self, figure, experiment_number):
+    def save_figure(self, figure, experiment_number, filename_prefix=""):
         """
         This saves the image to the ./experiment_results directory as a PNG.
         """
@@ -703,8 +721,13 @@ class Experiment:
         if not os.path.isdir(save_dir):
             path = Path(save_dir)
             path.mkdir(parents=True)
-        
+
         filename = "experiment_%d.png" % experiment_number
+
+        # Add the option to include a prefix in case we want to call this method
+        # multiple times within the same routine.
+        filename = filename_prefix + filename
+
         save_loc = os.path.join(save_dir, filename)
 
         width = 20 # inches 
@@ -713,6 +736,47 @@ class Experiment:
         figure.savefig(save_loc)
 
         print("Saving %s" % filename)
+
+
+    def compute_fft_draw_time_stats(self, t):
+        """
+        This routine takes in timer:Timer object that contains the results of 
+        having completed the FFT drawing routines. We use this to compute
+        """
+        t.compute_phot_draw_times(method="fft")
+        draw_times = t.final_times
+        image_sizes = [rendered_image[1]["image_size"] for rendered_image in t.rendered_images]
+        
+        # Safety check to ensure that only one image size is generated
+        assert len(set(image_sizes)) == 1
+
+        dat = dict()
+        dat["image_size"] = image_sizes[0]
+
+        mean_draw_time = np.mean(draw_times)
+        dat["mean_draw_time"] = mean_draw_time
+
+        draw_time_stdev = np.std(draw_times)
+        dat["draw_time_stdev"] = draw_time_stdev
+
+        return dat
+
+
+    def plot_fft_draw_time_vs_image_size(self, draw_times, stdevs, image_sizes, exp_number):
+        """
+        This routine takes in a list of draw times, stdevs, and image sizes and 
+        plots them.
+        """
+        fig, ax = plt.subplots()
+
+        ax.errorbar(image_sizes, draw_times, yerr=stdevs, fmt="o")
+        self.save_figure(fig, exp_number, filename_prefix="fft_draw_times")
+
+
+        
+
+
+        
 
 
 
@@ -774,8 +838,10 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 
 
 def main():
-    e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
-    e.run_fft_times_on_changing_flux()
+    e = Experiment(exp_dat_dir="test_time_v_image_size")
+    e.time_vs_flux_on_gal_size()
+    # e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
+    # e.run_fft_times_on_changing_flux()
     # e.run_all()
 
     # e1 = Experiment(exp_dat_dir="flux_v_time_fft_on_phot_shooting_experiments_entire_flux_range")
