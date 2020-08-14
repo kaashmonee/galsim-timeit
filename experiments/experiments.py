@@ -113,12 +113,6 @@ class Experiment:
         # plot the image times vs image size using the std dev list as the 
         # error bars
 
-        self.plot_fft_draw_time_vs_image_size(
-            fft_draw_times,
-            fft_draw_time_stdev,
-            fft_image_sizes,
-            1
-        )
 
         legend_labels.extend(["r = %f\n%s %s" % (r, annotation, method) for (r, annotation) in zip(half_light_radii, best_fit_equations)])
 
@@ -129,6 +123,17 @@ class Experiment:
 
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
+
+        fft_draw_time_title = "FFT Drawing Time vs. Image Size\nExperiment 1: Varying half_light_radius"
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            1,
+            title=fft_draw_time_title,
+            varied_data=half_light_radii
+        )
 
         if self.show:
             plt.show()
@@ -762,23 +767,40 @@ class Experiment:
         return dat
 
 
-    def plot_fft_draw_time_vs_image_size(self, draw_times, stdevs, image_sizes, exp_number):
+    def plot_fft_draw_time_vs_image_size(self, draw_times, stdevs, image_sizes, 
+                                         exp_number, title="", varied_data=None):
         """
         This routine takes in a list of draw times, stdevs, and image sizes and 
         plots them.
         """
         fig, ax = plt.subplots()
+        fontsize = 24
+        marker_size = 250
 
-        ax.errorbar(image_sizes, draw_times, yerr=stdevs, fmt="o")
+        ax.errorbar(image_sizes, np.array(draw_times)*10**6,
+                    yerr=np.array(stdevs)*10**6, fmt="o", 
+                    markersize=marker_size/10)
+
+        ax.set_title(title, fontsize=fontsize)
+        ax.set_xlabel("Image Size (Pixels)", fontsize=fontsize)
+        ax.set_ylabel(r"Time ($\mu$s)", fontsize=fontsize)
+
+        ax.tick_params(labelsize=24)
+        ax.grid(True)
         self.save_figure(fig, exp_number, filename_prefix="fft_draw_times")
 
+        fig, ax = plt.subplots()
+        title = "Image Size Dependence on Varied Parameter (half_light_radius)"
+        ax.set_title(title, fontsize=fontsize)
+        ax.set_xlabel("Varied Parameter (half_light_radius)", fontsize=fontsize)
+        ax.set_ylabel("Image Size (Pixels)", fontsize=fontsize)
+        ax.scatter(varied_data, image_sizes, marker_size)
+        ax.tick_params(labelsize=24)
+        ax.grid(True)
+        self.save_figure(fig, exp_number, filename_prefix="image_size_dependence")
+
 
         
-
-
-        
-
-
 
 class PhotonAndFFTPlottingExperiment(Experiment):
 
