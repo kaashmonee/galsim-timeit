@@ -105,6 +105,16 @@ class Experiment:
             # - add the fft std dev to a list of std dev times
             # - add the image size to a list of image times
 
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
             fft_draw_stats = self.compute_fft_draw_time_stats(t)
             fft_draw_times.append(fft_draw_stats["mean_draw_time"])
             fft_draw_time_stdev.append(fft_draw_stats["draw_time_stdev"])
