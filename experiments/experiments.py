@@ -39,6 +39,10 @@ class Experiment:
             "generated_images"
         )
 
+        self.fft_draw_times = []
+        self.fft_draw_time_stdev = []
+        self.fft_image_sizes = []
+
         self.default_flux_range = default_flux_range
 
 
@@ -135,6 +139,10 @@ class Experiment:
         axs[1].legend(legend_labels)
 
         fft_draw_time_title = "FFT Drawing Time vs. Image Size\nExperiment 1: Varying half_light_radius"
+
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
         
         self.plot_fft_draw_time_vs_image_size(
             fft_draw_times,
@@ -142,7 +150,8 @@ class Experiment:
             fft_image_sizes,
             1,
             title=fft_draw_time_title,
-            varied_data=half_light_radii
+            varied_data=half_light_radii,
+            varied_data_label="half_light_radius"
         )
 
         if self.show:
@@ -778,7 +787,8 @@ class Experiment:
 
 
     def plot_fft_draw_time_vs_image_size(self, draw_times, stdevs, image_sizes, 
-                                         exp_number, title="", varied_data=None):
+                                         exp_number, title="", varied_data=None,
+                                         varied_data_label=""):
         """
         This routine takes in a list of draw times, stdevs, and image sizes and 
         plots them.
