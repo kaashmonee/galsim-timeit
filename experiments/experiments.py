@@ -64,7 +64,7 @@ class Experiment:
             - Plotting initialization time and convolution time for each 
               half_light_radius value.
         """
-
+        exp_num = 1
         half_light_radii = np.linspace(0.5, 1.5, 5)
 
         if plot is None:
@@ -157,7 +157,7 @@ class Experiment:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 1)
+            self.save_figure(fig, exp_num)
 
 
     def time_vs_flux_on_gal_shape(self, method="phot", plot:tuple=None, legend_labels=[]):
@@ -177,6 +177,7 @@ class Experiment:
             - Varying the galaxy shear
             - Plotting initialization time and convolution time vs. flux for each shear value
         """
+        exp_num = 2
         # Obtained from demo3.py
         # The lower the gal_q the greater the shear.
         gal_qs = np.linspace(0.2, 1, 5)
@@ -193,6 +194,10 @@ class Experiment:
         best_fit_line_equations = []
 
         galaxy, psf = "sersic", "kolmogorov"
+
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
 
         for gal_q in gal_qs:
             t = Timer(galaxy, flux_range=self.default_flux_range)
@@ -214,6 +219,23 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
+
+
         legend_labels.extend(["q = %f\n%s %s" % (q, annot, method) for (q, annot) in zip(gal_qs, best_fit_line_equations)])
 
         title0 = axs[0].get_title() + "\nVarying q value (shear)"
@@ -225,11 +247,24 @@ class Experiment:
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
 
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=gal_qs,
+            varied_data_label="Galaxy Shear (q)"
+        )
+
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 2)
+            self.save_figure(fig, exp_num)
 
 
     def time_vs_flux_on_profile(self, method="phot", plot:tuple=None):
@@ -796,6 +831,8 @@ class Experiment:
         This routine takes in a list of draw times, stdevs, and image sizes and 
         plots them.
         """
+
+        # Create first plot
         fig, ax = plt.subplots()
         fontsize = 24
         marker_size = 250
@@ -803,6 +840,9 @@ class Experiment:
         ax.errorbar(image_sizes, np.array(draw_times)*10**6,
                     yerr=np.array(stdevs)*10**6, fmt="o", 
                     markersize=marker_size/10)
+
+        if title == "":
+            title = "FFT Image Drawing Time vs. k Image Size on Varied Parameter (%s)" % varied_data_label
 
         ax.set_title(title, fontsize=fontsize)
         ax.set_xlabel("Image Size (Pixels)", fontsize=fontsize)
@@ -812,6 +852,7 @@ class Experiment:
         ax.grid(True)
         self.save_figure(fig, exp_number, filename_prefix="fft_draw_times")
 
+        # Create second plot
         fig, ax = plt.subplots()
         title = "Image Size Dependence on Varied Parameter (%s)" % varied_data_label
         ax.set_title(title, fontsize=fontsize)
@@ -885,6 +926,7 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 def main():
     e = Experiment(exp_dat_dir="test_time_v_image_size")
     e.time_vs_flux_on_gal_size()
+    e.time_vs_flux_on_gal_shape()
     # e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
     # e.run_fft_times_on_changing_flux()
     # e.run_all()
