@@ -456,7 +456,7 @@ class Experiment:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 4)
+            self.save_figure(fig, exp_num)
 
 
     def time_vs_flux_on_optical_psf_params(self, method="phot", plot:tuple=None, legend_labels=[]):
@@ -476,7 +476,7 @@ class Experiment:
 
         Results: No dependence on aberration
         """
-
+        exp_num = 5
         # Include defocus, astigmatism, coma, and trefoil
 
         defocus = [0.0] * 12
@@ -500,6 +500,14 @@ class Experiment:
             spherical
         ]
 
+        aberrations_labels = [
+            "None",
+            "Defocus",
+            "Astigmatism",
+            "Coma",
+            "Spherical",
+        ]
+
         if plot is None:
             fig, axs = plt.subplots(1, 2)
         else:
@@ -512,6 +520,10 @@ class Experiment:
         psf = "optical"
 
         lines = []
+
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
 
         for aberrations in aberrations_list:
 
@@ -529,6 +541,22 @@ class Experiment:
             lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
+
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
 
 
         temp_labels = [
@@ -551,6 +579,19 @@ class Experiment:
 
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
+
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=aberrations_labels,
+            varied_data_label="Aberrations"
+        )
 
         if self.show:
             plt.show()
@@ -1013,8 +1054,8 @@ def main():
     # e.time_vs_flux_on_gal_size()
     # e.time_vs_flux_on_gal_shape()
     # e.time_vs_flux_on_profile()
-    e.time_vs_flux_on_psf()
-    # e.time_vs_flux_on_optical_psf_params()
+    # e.time_vs_flux_on_psf()
+    e.time_vs_flux_on_optical_psf_params()
     # e.time_vs_flux_on_optical_psf_vary_obscuration()
     # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
     # e.fft_image_size_vs_flux_vary_lam_over_diam()
