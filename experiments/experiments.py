@@ -618,6 +618,7 @@ class Experiment:
             - Plot instantiation time and convolution time for each flux value on different convolutions
               for 2 different lam_over_diam parameters.
         """
+        exp_num = 6
 
         if plot is None:
             fig, axs = plt.subplots(1, 2)
@@ -633,6 +634,10 @@ class Experiment:
         obscurations = np.linspace(0, 0.5, 5)
 
         lines = []
+
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
 
         for obscuration in obscurations:
 
@@ -651,6 +656,22 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
+
 
         temp_labels = ["obscuration = %f %s" % (o, method) for o in obscurations]
 
@@ -662,11 +683,24 @@ class Experiment:
 
         draw_axis.legend(legend_labels)
 
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=obscurations,
+            varied_data_label="Obscurations"
+        )
+
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 6)
+            self.save_figure(fig, exp_num)
 
 
     def time_vs_flux_on_optical_psf_vary_lam_over_diam(self, method="phot", plot:tuple=None, legend_labels=[]):
@@ -685,7 +719,8 @@ class Experiment:
             - One repetition
             - Plot instantiation time and convolution time for each flux value on different convolutions
               for 2 different lam_over_diam parameters.
-        """                
+        """
+        exp_num = 7
         if plot is None:
             fig, axs = plt.subplots(1, 2)
         else:
@@ -705,6 +740,10 @@ class Experiment:
         lam_over_diams = np.linspace(0.1, 5., 5) * lod
 
         lines = []
+
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
 
         for lam_over_diam in lam_over_diams:
             
@@ -730,6 +769,22 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
+
 
         temp_labels = ["lam_over_diam = %f arcsecs %s" % (lod, method) for lod in lam_over_diams]
 
@@ -741,11 +796,24 @@ class Experiment:
         init_axis.legend(legend_labels)
         draw_axis.legend(legend_labels)
 
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=lam_over_diams,
+            varied_data_label="lam/diam"
+        )
+
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 7)
+            self.save_figure(fig, exp_num)
 
 
     def fft_image_size_vs_flux_vary_lam_over_diam(self, method="phot", plot:tuple=None):
@@ -1055,9 +1123,9 @@ def main():
     # e.time_vs_flux_on_gal_shape()
     # e.time_vs_flux_on_profile()
     # e.time_vs_flux_on_psf()
-    e.time_vs_flux_on_optical_psf_params()
-    # e.time_vs_flux_on_optical_psf_vary_obscuration()
-    # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
+    # e.time_vs_flux_on_optical_psf_params()
+    e.time_vs_flux_on_optical_psf_vary_obscuration()
+    e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
     # e.fft_image_size_vs_flux_vary_lam_over_diam()
 
 
