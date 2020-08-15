@@ -285,6 +285,7 @@ class Experiment:
             - Plot initialization time and convolution time for each flux value
               for each galaxy.
         """
+        exp_num = 3
 
         if plot is None:
             fig, axs = plt.subplots(1, 2)
@@ -297,6 +298,10 @@ class Experiment:
 
         best_fit_line_equations = []
 
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
+
         for gal_name in Timer.GALAXY_NAMES:
             t = Timer(gal_name, flux_range=self.default_flux_range)
             t.time_init()
@@ -307,6 +312,22 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
             best_fit_line_equations.append(t.draw_time_line_annotation)
+
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
 
         axs[0].set_title("Init Time for Different Galaxy Profiles")
         axs[1].set_title("Time vs. Photon Shooting for Different Profiles Convolved with %s PSF" % psf)
@@ -324,14 +345,26 @@ class Experiment:
         labels_annotated_half = [label + "\n%s" % annot for (label, annot) in zip(line_legend_labels_to_modify, best_fit_line_equations)]
         ax1labels = list(labels_annotated_half) + list(rest)
 
-        # import pdb; pdb.set_trace()
         axs[1].legend(ax1labels)
+
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=list(Timer.GALAXY_NAMES.values()),
+            varied_data_label="Galaxy Brightness Profiles"
+        )
 
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 3)
+            self.save_figure(fig, exp_num)
     
     def time_vs_flux_on_psf(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
@@ -858,7 +891,24 @@ class Experiment:
         ax.set_title(title, fontsize=fontsize)
         ax.set_xlabel("Varied Parameter (%s)" % varied_data_label, fontsize=fontsize)
         ax.set_ylabel("Image Size (Pixels)", fontsize=fontsize)
-        ax.scatter(varied_data, image_sizes, marker_size)
+
+        # If the varied data is an array of labels, then do a scatter plot
+        # where the x axis is a series of string labels.
+
+        if varied_data is not None:
+            # If the data contains an array of strings
+            # dtype("<U1") is what numpy uses to indicate if an numpy array
+            # contains strings
+            # pdb.set_trace()
+            if np.array(varied_data).dtype == np.dtype("<U1"):
+                x = np.arange(len(varied_data))
+                y = image_sizes
+                xtick_labels = varied_data
+                ax.scatter(x, y)
+                ax.set_xticklabels(xtick_labels)
+            else:
+                ax.scatter(varied_data, image_sizes, marker_size)
+
         ax.tick_params(labelsize=24)
         ax.grid(True)
         self.save_figure(fig, exp_number, filename_prefix="image_size_dependence")
@@ -925,8 +975,17 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 
 def main():
     e = Experiment(exp_dat_dir="test_time_v_image_size")
-    e.time_vs_flux_on_gal_size()
-    e.time_vs_flux_on_gal_shape()
+
+    # e.time_vs_flux_on_gal_size()
+    # e.time_vs_flux_on_gal_shape()
+    e.time_vs_flux_on_profile()
+    # e.time_vs_flux_on_psf()
+    # e.time_vs_flux_on_optical_psf_params()
+    # e.time_vs_flux_on_optical_psf_vary_obscuration()
+    # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
+    # e.fft_image_size_vs_flux_vary_lam_over_diam()
+
+
     # e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
     # e.run_fft_times_on_changing_flux()
     # e.run_all()
