@@ -810,9 +810,9 @@ class Experiment:
         self.save_figure(fig, exp_number, filename_prefix="fft_draw_times")
 
         fig, ax = plt.subplots()
-        title = "Image Size Dependence on Varied Parameter (half_light_radius)"
+        title = "Image Size Dependence on Varied Parameter (%s)" % varied_data_label
         ax.set_title(title, fontsize=fontsize)
-        ax.set_xlabel("Varied Parameter (half_light_radius)", fontsize=fontsize)
+        ax.set_xlabel("Varied Parameter (%s)" % varied_data_label, fontsize=fontsize)
         ax.set_ylabel("Image Size (Pixels)", fontsize=fontsize)
         ax.scatter(varied_data, image_sizes, marker_size)
         ax.tick_params(labelsize=24)
