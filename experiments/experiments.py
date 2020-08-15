@@ -834,7 +834,7 @@ class Experiment:
             - Perform photon shooting using the compute_phot_draw_times() routine without any parameters on a Timer object.
             - Plot image size vs. flux.
         """
-
+        exp_num = 8
         if plot is None:
             fig, [ax, ax2] = plt.subplots(1, 2)
         else:
@@ -911,7 +911,33 @@ class Experiment:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 8)
+            self.save_figure(fig, exp_num)
+
+
+    def fft_draw_time_vs_image_size_consolidated(self):
+        """
+        experiment_9
+
+        Experiment: After running all the previous routines, plot the 
+        consolidated plot of FFT drawing times vs. image size.
+        """
+        exp_num = 9
+        method="phot"
+        self.time_vs_flux_on_gal_size(method=method)
+        self.time_vs_flux_on_gal_shape(method=method)
+        self.time_vs_flux_on_profile(method=method)
+        self.time_vs_flux_on_psf(method=method)
+        self.time_vs_flux_on_optical_psf_params(method=method)
+        self.time_vs_flux_on_optical_psf_vary_obscuration(method=method)
+        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method=method)
+
+        self.plot_fft_draw_time_vs_image_size(
+            self.fft_draw_times,
+            self.fft_draw_time_stdev,
+            self.fft_image_sizes,
+            exp_num,
+        )
+
 
 
     def run_all(self, method="phot"):
@@ -1018,7 +1044,14 @@ class Experiment:
                     markersize=marker_size/10)
 
         if title == "":
-            title = "FFT Image Drawing Time vs. k Image Size on Varied Parameter (%s)" % varied_data_label
+            if exp_number == 9:
+                # Experiment 9 is a special experiment because that is the 
+                # experiment where we consolidate all our experiment results.
+                # We want to use a differnet title for experiment 9 when 
+                # running this routine.
+                title = "FFT Image Drawing Time vs. k Image Size Consolidated Across All Experiments"
+            else:
+                title = "FFT Image Drawing Time vs. k Image Size on Varied Parameter (%s)" % varied_data_label
 
         ax.set_title(title, fontsize=fontsize)
         ax.set_xlabel("Image Size (Pixels)", fontsize=fontsize)
@@ -1039,6 +1072,7 @@ class Experiment:
         # where the x axis is a series of string labels.
 
         if varied_data is not None:
+
             # If the data contains an array of strings
             # dtype("<U1") is what numpy uses to indicate if an numpy array
             # contains strings
@@ -1052,12 +1086,11 @@ class Experiment:
             else:
                 ax.scatter(varied_data, image_sizes, marker_size)
 
-        ax.tick_params(labelsize=24)
-        ax.grid(True)
-        self.save_figure(fig, exp_number, filename_prefix="image_size_dependence")
+            ax.tick_params(labelsize=24)
+            ax.grid(True)
+            self.save_figure(fig, exp_number, filename_prefix="image_size_dependence")
 
 
-        
 
 class PhotonAndFFTPlottingExperiment(Experiment):
 
@@ -1124,9 +1157,10 @@ def main():
     # e.time_vs_flux_on_profile()
     # e.time_vs_flux_on_psf()
     # e.time_vs_flux_on_optical_psf_params()
-    e.time_vs_flux_on_optical_psf_vary_obscuration()
-    e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
+    # e.time_vs_flux_on_optical_psf_vary_obscuration()
+    # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
     # e.fft_image_size_vs_flux_vary_lam_over_diam()
+    e.fft_draw_time_vs_image_size_consolidated()
 
 
     # e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
