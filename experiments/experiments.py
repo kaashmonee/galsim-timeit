@@ -119,10 +119,9 @@ class Experiment:
             # t.time_init()
             # t.set_psf(psf)
 
-            fft_draw_stats = self.compute_fft_draw_time_stats(t)
-            fft_draw_times.append(fft_draw_stats["mean_draw_time"])
-            fft_draw_time_stdev.append(fft_draw_stats["draw_time_stdev"])
-            fft_image_sizes.append(fft_draw_stats["image_size"])
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
 
         # plot the image times vs image size using the std dev list as the 
         # error bars
@@ -762,7 +761,8 @@ class Experiment:
         print("Saving %s" % filename)
 
 
-    def compute_fft_draw_time_stats(self, t):
+    def compute_fft_draw_time_stats(self, t, fft_draw_times, fft_draw_time_stdev,
+                                    fft_image_sizes):
         """
         This routine takes in timer:Timer object that contains the results of 
         having completed the FFT drawing routines. We use this to compute
@@ -783,7 +783,10 @@ class Experiment:
         draw_time_stdev = np.std(draw_times)
         dat["draw_time_stdev"] = draw_time_stdev
 
-        return dat
+        fft_draw_times.append(dat["mean_draw_time"])
+        fft_draw_time_stdev.append(dat["draw_time_stdev"])
+        fft_image_sizes.append(dat["image_size"])
+
 
 
     def plot_fft_draw_time_vs_image_size(self, draw_times, stdevs, image_sizes, 
