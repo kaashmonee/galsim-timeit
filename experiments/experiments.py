@@ -1,6 +1,7 @@
 from timer import Timer
 from timer.helpers import get_axis_legend_labels
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import numpy as np
 import galsim
 from scipy import stats
@@ -8,7 +9,7 @@ import os
 from pathlib import Path
 
 # DEBUGGING TOOLS #
-import pdb
+# import pdb
 # END DEBUGING TOOLS #
 
 class Experiment:
@@ -39,6 +40,10 @@ class Experiment:
             "generated_images"
         )
 
+        self.fft_draw_times = []
+        self.fft_draw_time_stdev = []
+        self.fft_image_sizes = []
+
         self.default_flux_range = default_flux_range
 
 
@@ -60,7 +65,7 @@ class Experiment:
             - Plotting initialization time and convolution time for each 
               half_light_radius value.
         """
-
+        exp_num = 1
         half_light_radii = np.linspace(0.5, 1.5, 5)
 
         if plot is None:
@@ -76,6 +81,10 @@ class Experiment:
         galaxy = "exponential"
         psf = "kolmogorov"
 
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
+
         for r in half_light_radii:
 
             params = Timer.GALAXY_CONSTRUCTOR_DEFAULT_PARAMS[galaxy]
@@ -85,10 +94,39 @@ class Experiment:
             t.time_init()
             t.set_psf(psf)
             t.compute_phot_draw_times(method=method)
+
             best_fit_equations.append(t.draw_time_line_annotation)
+
 
             t.plot_init_times(axis=init_ax)
             t.plot_draw_times(axis=draw_ax)
+
+            # algorithm:
+            # run t.compute_phot_draw_times(method="fft")
+            # - get the fft times
+            #   - compute the average and std deviation
+            # - compute the image size
+            # - add the fft average time to a list of average times
+            # - add the fft std dev to a list of std dev times
+            # - add the image size to a list of image times
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
+
+        # plot the image times vs image size using the std dev list as the 
+        # error bars
+
 
         legend_labels.extend(["r = %f\n%s %s" % (r, annotation, method) for (r, annotation) in zip(half_light_radii, best_fit_equations)])
 
@@ -100,11 +138,27 @@ class Experiment:
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
 
+        fft_draw_time_title = "FFT Drawing Time vs. Image Size\nExperiment 1: Varying half_light_radius"
+
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            1,
+            title=fft_draw_time_title,
+            varied_data=half_light_radii,
+            varied_data_label="half_light_radius"
+        )
+
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 1)
+            self.save_figure(fig, exp_num)
 
 
     def time_vs_flux_on_gal_shape(self, method="phot", plot:tuple=None, legend_labels=[]):
@@ -124,6 +178,7 @@ class Experiment:
             - Varying the galaxy shear
             - Plotting initialization time and convolution time vs. flux for each shear value
         """
+        exp_num = 2
         # Obtained from demo3.py
         # The lower the gal_q the greater the shear.
         gal_qs = np.linspace(0.2, 1, 5)
@@ -140,6 +195,10 @@ class Experiment:
         best_fit_line_equations = []
 
         galaxy, psf = "sersic", "kolmogorov"
+
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
 
         for gal_q in gal_qs:
             t = Timer(galaxy, flux_range=self.default_flux_range)
@@ -161,6 +220,23 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
+
+
         legend_labels.extend(["q = %f\n%s %s" % (q, annot, method) for (q, annot) in zip(gal_qs, best_fit_line_equations)])
 
         title0 = axs[0].get_title() + "\nVarying q value (shear)"
@@ -172,11 +248,24 @@ class Experiment:
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
 
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=gal_qs,
+            varied_data_label="Galaxy Shear (q)"
+        )
+
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 2)
+            self.save_figure(fig, exp_num)
 
 
     def time_vs_flux_on_profile(self, method="phot", plot:tuple=None):
@@ -197,6 +286,7 @@ class Experiment:
             - Plot initialization time and convolution time for each flux value
               for each galaxy.
         """
+        exp_num = 3
 
         if plot is None:
             fig, axs = plt.subplots(1, 2)
@@ -209,6 +299,10 @@ class Experiment:
 
         best_fit_line_equations = []
 
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
+
         for gal_name in Timer.GALAXY_NAMES:
             t = Timer(gal_name, flux_range=self.default_flux_range)
             t.time_init()
@@ -219,6 +313,22 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
             best_fit_line_equations.append(t.draw_time_line_annotation)
+
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
 
         axs[0].set_title("Init Time for Different Galaxy Profiles")
         axs[1].set_title("Time vs. Photon Shooting for Different Profiles Convolved with %s PSF" % psf)
@@ -236,14 +346,26 @@ class Experiment:
         labels_annotated_half = [label + "\n%s" % annot for (label, annot) in zip(line_legend_labels_to_modify, best_fit_line_equations)]
         ax1labels = list(labels_annotated_half) + list(rest)
 
-        # import pdb; pdb.set_trace()
         axs[1].legend(ax1labels)
+
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=list(Timer.GALAXY_NAMES.values()),
+            varied_data_label="Galaxy Brightness Profiles"
+        )
 
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 3)
+            self.save_figure(fig, exp_num)
     
     def time_vs_flux_on_psf(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
@@ -261,6 +383,7 @@ class Experiment:
             - Plot instantiation time and convolution time for each flux value on different convolutions
               with different PSFs.
         """
+        exp_num = 4
         if plot is None:
             fig, axs = plt.subplots(1, 2)
         else:
@@ -271,6 +394,10 @@ class Experiment:
 
         galaxy = "sersic"
         lines = []
+
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
 
         for psf in Timer.PSFS:
             t = Timer(galaxy, flux_range=self.default_flux_range)
@@ -285,6 +412,22 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
+
         temp_labels = [(psf+" %s" % method) for psf in Timer.PSFS]
         
         title1 = "Time vs. Photon Shooting for Sersic Profile Convolved with Various PSFs"
@@ -297,11 +440,24 @@ class Experiment:
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
 
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=list(Timer.PSFS.values()),
+            varied_data_label="PSF"
+        )
+
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 4)
+            self.save_figure(fig, exp_num)
 
 
     def time_vs_flux_on_optical_psf_params(self, method="phot", plot:tuple=None, legend_labels=[]):
@@ -321,7 +477,7 @@ class Experiment:
 
         Results: No dependence on aberration
         """
-
+        exp_num = 5
         # Include defocus, astigmatism, coma, and trefoil
 
         defocus = [0.0] * 12
@@ -345,6 +501,14 @@ class Experiment:
             spherical
         ]
 
+        aberrations_labels = [
+            "None",
+            "Defocus",
+            "Astigmatism",
+            "Coma",
+            "Spherical",
+        ]
+
         if plot is None:
             fig, axs = plt.subplots(1, 2)
         else:
@@ -357,6 +521,10 @@ class Experiment:
         psf = "optical"
 
         lines = []
+
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
 
         for aberrations in aberrations_list:
 
@@ -374,6 +542,22 @@ class Experiment:
             lines.append(t.draw_time_line_annotation)
 
             t.plot_draw_times(axis=draw_axis)
+
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
 
 
         temp_labels = [
@@ -396,6 +580,19 @@ class Experiment:
 
         axs[0].legend(legend_labels)
         axs[1].legend(legend_labels)
+
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=aberrations_labels,
+            varied_data_label="Aberrations"
+        )
 
         if self.show:
             plt.show()
@@ -422,6 +619,7 @@ class Experiment:
             - Plot instantiation time and convolution time for each flux value on different convolutions
               for 2 different lam_over_diam parameters.
         """
+        exp_num = 6
 
         if plot is None:
             fig, axs = plt.subplots(1, 2)
@@ -437,6 +635,10 @@ class Experiment:
         obscurations = np.linspace(0, 0.5, 5)
 
         lines = []
+
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
 
         for obscuration in obscurations:
 
@@ -455,6 +657,22 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
+
 
         temp_labels = ["obscuration = %f %s" % (o, method) for o in obscurations]
 
@@ -466,11 +684,24 @@ class Experiment:
 
         draw_axis.legend(legend_labels)
 
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=obscurations,
+            varied_data_label="Obscurations"
+        )
+
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 6)
+            self.save_figure(fig, exp_num)
 
 
     def time_vs_flux_on_optical_psf_vary_lam_over_diam(self, method="phot", plot:tuple=None, legend_labels=[]):
@@ -489,7 +720,8 @@ class Experiment:
             - One repetition
             - Plot instantiation time and convolution time for each flux value on different convolutions
               for 2 different lam_over_diam parameters.
-        """                
+        """
+        exp_num = 7
         if plot is None:
             fig, axs = plt.subplots(1, 2)
         else:
@@ -509,6 +741,10 @@ class Experiment:
         lam_over_diams = np.linspace(0.1, 5., 5) * lod
 
         lines = []
+
+        fft_draw_times = []
+        fft_draw_time_stdev = []
+        fft_image_sizes = []
 
         for lam_over_diam in lam_over_diams:
             
@@ -534,6 +770,22 @@ class Experiment:
 
             t.plot_draw_times(axis=draw_axis)
 
+            # Running FFT drawing time routine.
+
+            # This is to make sure that the compute_phot_draw_times routine in 
+            # core is idempotent. We test this comparing the output of that 
+            # routine on a new object vs an object that we have already run
+            # that routine on. Uncomment the following 3 lines 
+            # if you want to run this test.
+
+            # t = Timer(galaxy, flux_range=self.default_flux_range, **params)
+            # t.time_init()
+            # t.set_psf(psf)
+
+            self.compute_fft_draw_time_stats(
+                t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
+            )
+
 
         temp_labels = ["lam_over_diam = %f arcsecs %s" % (lod, method) for lod in lam_over_diams]
 
@@ -545,11 +797,24 @@ class Experiment:
         init_axis.legend(legend_labels)
         draw_axis.legend(legend_labels)
 
+        self.fft_draw_times.extend(fft_draw_times)
+        self.fft_draw_time_stdev.extend(fft_draw_times)
+        self.fft_image_sizes.extend(fft_image_sizes)
+        
+        self.plot_fft_draw_time_vs_image_size(
+            fft_draw_times,
+            fft_draw_time_stdev,
+            fft_image_sizes,
+            exp_num,
+            varied_data=lam_over_diams,
+            varied_data_label="lam/diam"
+        )
+
         if self.show:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 7)
+            self.save_figure(fig, exp_num)
 
 
     def fft_image_size_vs_flux_vary_lam_over_diam(self, method="phot", plot:tuple=None):
@@ -570,7 +835,7 @@ class Experiment:
             - Perform photon shooting using the compute_phot_draw_times() routine without any parameters on a Timer object.
             - Plot image size vs. flux.
         """
-
+        exp_num = 8
         if plot is None:
             fig, [ax, ax2] = plt.subplots(1, 2)
         else:
@@ -647,7 +912,33 @@ class Experiment:
             plt.show()
 
         if self.save:
-            self.save_figure(fig, 8)
+            self.save_figure(fig, exp_num)
+
+
+    def fft_draw_time_vs_image_size_consolidated(self):
+        """
+        experiment_9
+
+        Experiment: After running all the previous routines, plot the 
+        consolidated plot of FFT drawing times vs. image size.
+        """
+        exp_num = 9
+        method="phot"
+        self.time_vs_flux_on_gal_size(method=method)
+        self.time_vs_flux_on_gal_shape(method=method)
+        self.time_vs_flux_on_profile(method=method)
+        self.time_vs_flux_on_psf(method=method)
+        self.time_vs_flux_on_optical_psf_params(method=method)
+        self.time_vs_flux_on_optical_psf_vary_obscuration(method=method)
+        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method=method)
+
+        self.plot_fft_draw_time_vs_image_size(
+            self.fft_draw_times,
+            self.fft_draw_time_stdev,
+            self.fft_image_sizes,
+            exp_num,
+        )
+
 
 
     def run_all(self, method="phot"):
@@ -681,7 +972,7 @@ class Experiment:
             print("%s fwhm (arcseconds): %f" % (psf, t.cur_psf_obj.calculateFWHM()))
 
 
-    def save_figure(self, figure, experiment_number):
+    def save_figure(self, figure, experiment_number, filename_prefix=""):
         """
         This saves the image to the ./experiment_results directory as a PNG.
         """
@@ -691,8 +982,13 @@ class Experiment:
         if not os.path.isdir(save_dir):
             path = Path(save_dir)
             path.mkdir(parents=True)
-        
+
         filename = "experiment_%d.png" % experiment_number
+
+        # Add the option to include a prefix in case we want to call this method
+        # multiple times within the same routine.
+        filename = filename_prefix + filename
+
         save_loc = os.path.join(save_dir, filename)
 
         width = 20 # inches 
@@ -701,6 +997,102 @@ class Experiment:
         figure.savefig(save_loc)
 
         print("Saving %s" % filename)
+
+
+    def compute_fft_draw_time_stats(self, t, fft_draw_times, fft_draw_time_stdev,
+                                    fft_image_sizes):
+        """
+        This routine takes in timer:Timer object that contains the results of 
+        having completed the FFT drawing routines. We use this to compute
+        """
+        t.compute_phot_draw_times(method="fft")
+        draw_times = t.final_times
+        image_sizes = [rendered_image[1]["image_size"] for rendered_image in t.rendered_images]
+        
+        # Safety check to ensure that only one image size is generated
+        assert len(set(image_sizes)) == 1
+
+        dat = dict()
+        dat["image_size"] = image_sizes[0]
+
+        mean_draw_time = np.mean(draw_times)
+        dat["mean_draw_time"] = mean_draw_time
+
+        draw_time_stdev = np.std(draw_times)
+        dat["draw_time_stdev"] = draw_time_stdev
+
+        fft_draw_times.append(dat["mean_draw_time"])
+        fft_draw_time_stdev.append(dat["draw_time_stdev"])
+        fft_image_sizes.append(dat["image_size"])
+
+
+
+    def plot_fft_draw_time_vs_image_size(self, draw_times, stdevs, image_sizes, 
+                                         exp_number, title="", varied_data=None,
+                                         varied_data_label=""):
+        """
+        This routine takes in a list of draw times, stdevs, and image sizes and 
+        plots them.
+        """
+
+        # Create first plot
+        fig, ax = plt.subplots()
+        fontsize = 24
+        marker_size = 250
+
+        ax.errorbar(image_sizes, np.array(draw_times),
+                    yerr=np.array(stdevs), fmt="o", 
+                    markersize=marker_size/10)
+
+        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.2e"))
+
+        if title == "":
+            if exp_number == 9:
+                # Experiment 9 is a special experiment because that is the 
+                # experiment where we consolidate all our experiment results.
+                # We want to use a differnet title for experiment 9 when 
+                # running this routine.
+                title = "FFT Image Drawing Time vs. k Image Size Consolidated Across All Experiments"
+            else:
+                title = "FFT Image Drawing Time vs. k Image Size on Varied Parameter (%s)" % varied_data_label
+
+        ax.set_title(title, fontsize=fontsize)
+        ax.set_xlabel("Image Size (Pixels)", fontsize=fontsize)
+        ax.set_ylabel("Time (s)", fontsize=fontsize)
+
+        ax.tick_params(labelsize=24)
+        ax.grid(True)
+        self.save_figure(fig, exp_number, filename_prefix="fft_draw_times")
+
+        # Create second plot
+        fig, ax = plt.subplots()
+        title = "Image Size Dependence on Varied Parameter (%s)" % varied_data_label
+        ax.set_title(title, fontsize=fontsize)
+        ax.set_xlabel("Varied Parameter (%s)" % varied_data_label, fontsize=fontsize)
+        ax.set_ylabel("Image Size (Pixels)", fontsize=fontsize)
+
+        # If the varied data is an array of labels, then do a scatter plot
+        # where the x axis is a series of string labels.
+
+        if varied_data is not None:
+
+            # If the data contains an array of strings
+            # dtype("<U1") is what numpy uses to indicate if an numpy array
+            # contains strings
+            if np.array(varied_data).dtype == np.dtype("<U1"):
+                x = np.arange(len(varied_data))
+                y = image_sizes
+                xtick_labels = varied_data
+                ax.scatter(x, y)
+                ax.set_xticklabels(xtick_labels)
+            else:
+                ax.scatter(varied_data, image_sizes, marker_size)
+
+            ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%03d"))
+
+            ax.tick_params(labelsize=24)
+            ax.grid(True)
+            self.save_figure(fig, exp_number, filename_prefix="image_size_dependence")
 
 
 
@@ -758,11 +1150,25 @@ class PhotonAndFFTPlottingExperiment(Experiment):
         labels = get_axis_legend_labels(plots[6][1][1])
         self.save = True
         self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method="fft", plot=plots[6], legend_labels=labels)
-        
+
+
 
 def main():
-    e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
-    e.run_fft_times_on_changing_flux()
+    e = Experiment(exp_dat_dir="test_time_v_image_size")
+
+    # e.time_vs_flux_on_gal_size()
+    # e.time_vs_flux_on_gal_shape()
+    # e.time_vs_flux_on_profile()
+    # e.time_vs_flux_on_psf()
+    # e.time_vs_flux_on_optical_psf_params()
+    # e.time_vs_flux_on_optical_psf_vary_obscuration()
+    # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
+    # e.fft_image_size_vs_flux_vary_lam_over_diam()
+    e.fft_draw_time_vs_image_size_consolidated()
+
+
+    # e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
+    # e.run_fft_times_on_changing_flux()
     # e.run_all()
 
     # e1 = Experiment(exp_dat_dir="flux_v_time_fft_on_phot_shooting_experiments_entire_flux_range")
