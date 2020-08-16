@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 # DEBUGGING TOOLS #
-import pdb
+# import pdb
 # END DEBUGING TOOLS #
 
 class Experiment:
@@ -1079,7 +1079,6 @@ class Experiment:
             # If the data contains an array of strings
             # dtype("<U1") is what numpy uses to indicate if an numpy array
             # contains strings
-            # pdb.set_trace()
             if np.array(varied_data).dtype == np.dtype("<U1"):
                 x = np.arange(len(varied_data))
                 y = image_sizes
