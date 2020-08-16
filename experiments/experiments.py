@@ -1,6 +1,7 @@
 from timer import Timer
 from timer.helpers import get_axis_legend_labels
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import numpy as np
 import galsim
 from scipy import stats
@@ -1039,9 +1040,11 @@ class Experiment:
         fontsize = 24
         marker_size = 250
 
-        ax.errorbar(image_sizes, np.array(draw_times)*10**6,
-                    yerr=np.array(stdevs)*10**6, fmt="o", 
+        ax.errorbar(image_sizes, np.array(draw_times),
+                    yerr=np.array(stdevs), fmt="o", 
                     markersize=marker_size/10)
+
+        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.2e"))
 
         if title == "":
             if exp_number == 9:
@@ -1055,7 +1058,7 @@ class Experiment:
 
         ax.set_title(title, fontsize=fontsize)
         ax.set_xlabel("Image Size (Pixels)", fontsize=fontsize)
-        ax.set_ylabel(r"Time ($\mu$s)", fontsize=fontsize)
+        ax.set_ylabel("Time (s)", fontsize=fontsize)
 
         ax.tick_params(labelsize=24)
         ax.grid(True)
@@ -1085,6 +1088,8 @@ class Experiment:
                 ax.set_xticklabels(xtick_labels)
             else:
                 ax.scatter(varied_data, image_sizes, marker_size)
+
+            ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%03d"))
 
             ax.tick_params(labelsize=24)
             ax.grid(True)
