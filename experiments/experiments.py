@@ -125,6 +125,13 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_ax)
+            draw_ax.plot(t.flux_scale_disp, mean_times, color=color)
+
         # plot the image times vs image size using the std dev list as the 
         # error bars
 
@@ -1165,7 +1172,7 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 def main():
     e = Experiment(exp_dat_dir="plotting_fixes")
 
-    # e.time_vs_flux_on_gal_size()
+    e.time_vs_flux_on_gal_size()
     e.time_vs_flux_on_gal_shape()
     # e.time_vs_flux_on_profile()
     # e.time_vs_flux_on_psf()
