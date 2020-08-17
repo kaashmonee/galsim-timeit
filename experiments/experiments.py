@@ -1183,7 +1183,7 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 
 
 def main():
-    e = Experiment(exp_dat_dir="plotting_fixes")
+    e = Experiment(exp_dat_dir="plotting_fixes", default_flux_range=(1.e1, 1.e5 + 1.e5/1.5))
 
     # e.time_vs_flux_on_gal_size()
     # e.time_vs_flux_on_gal_shape()
