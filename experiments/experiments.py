@@ -47,6 +47,9 @@ class Experiment:
 
         self.default_flux_range = default_flux_range
 
+        # Plotting...
+        self.default_fontsize = 24
+
 
     def time_vs_flux_on_gal_size(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
@@ -70,12 +73,9 @@ class Experiment:
         half_light_radii = np.linspace(0.5, 1.5, 5)
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_ax = plt.subplots()
         else:
             (fig, axs) = plot
-
-        init_ax = axs[0]
-        draw_ax = axs[1]
 
         best_fit_equations = []
 
@@ -98,8 +98,6 @@ class Experiment:
 
             best_fit_equations.append(t.draw_time_line_annotation)
 
-
-            t.plot_init_times(axis=init_ax)
             t.plot_draw_times(axis=draw_ax)
 
             # algorithm:
@@ -138,13 +136,12 @@ class Experiment:
 
         legend_labels.extend(["r = %f\n%s %s" % (r, annotation, method) for (r, annotation) in zip(half_light_radii, best_fit_equations)])
 
-        title0 = axs[0].get_title() + "\nVarying half_light_radius"
-        title1 = axs[1].get_title() + "\nVarying half_light_radius"
-        axs[0].set_title(title0)
-        axs[1].set_title(title1)
+        title = draw_ax.get_title() + "\nVarying half_light_radius"
+        draw_ax.set_title(title)
 
-        axs[0].legend(legend_labels)
-        axs[1].legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_ax.lines[line_num] for line_num in range(0, len(draw_ax.lines), 2)]
+        draw_ax.legend(alt_lines, legend_labels, fontsize=self.default_fontsize)
 
         fft_draw_time_title = "FFT Drawing Time vs. Image Size\nExperiment 1: Varying half_light_radius"
 
@@ -975,12 +972,12 @@ class Experiment:
         exp_num = 9
         method="phot"
         self.time_vs_flux_on_gal_size(method=method)
-        self.time_vs_flux_on_gal_shape(method=method)
-        self.time_vs_flux_on_profile(method=method)
-        self.time_vs_flux_on_psf(method=method)
-        self.time_vs_flux_on_optical_psf_params(method=method)
-        self.time_vs_flux_on_optical_psf_vary_obscuration(method=method)
-        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method=method)
+        # self.time_vs_flux_on_gal_shape(method=method)
+        # self.time_vs_flux_on_profile(method=method)
+        # self.time_vs_flux_on_psf(method=method)
+        # self.time_vs_flux_on_optical_psf_params(method=method)
+        # self.time_vs_flux_on_optical_psf_vary_obscuration(method=method)
+        # self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method=method)
 
         self.plot_fft_draw_time_vs_image_size(
             self.fft_draw_times,
@@ -1035,6 +1032,15 @@ class Experiment:
 
         filename = "experiment_%d.png" % experiment_number
 
+        # Get the axis and increase the font for all the plot and axes titles.
+        # Also make some other modifications to the plots.
+        axis = figure.get_axes()[0]
+        axis.grid(True)
+        axis.tick_params(labelsize=self.default_fontsize)
+        axis.set_title(axis.get_title(), fontsize=self.default_fontsize)
+        axis.set_xlabel(axis.get_xlabel(), fontsize=self.default_fontsize)
+        axis.set_ylabel(axis.get_ylabel(), fontsize=self.default_fontsize)
+
         # Add the option to include a prefix in case we want to call this method
         # multiple times within the same routine.
         filename = filename_prefix + filename
@@ -1087,7 +1093,6 @@ class Experiment:
 
         # Create first plot
         fig, ax = plt.subplots()
-        fontsize = 24
         marker_size = 250
 
         ax.errorbar(image_sizes, np.array(draw_times),
@@ -1106,20 +1111,18 @@ class Experiment:
             else:
                 title = "FFT Image Drawing Time vs. k Image Size on Varied Parameter (%s)" % varied_data_label
 
-        ax.set_title(title, fontsize=fontsize)
-        ax.set_xlabel("Image Size (Pixels)", fontsize=fontsize)
-        ax.set_ylabel("Time (s)", fontsize=fontsize)
+        ax.set_title(title)
+        ax.set_xlabel("Image Size (Pixels)")
+        ax.set_ylabel("Time (s)")
 
-        ax.tick_params(labelsize=24)
-        ax.grid(True)
         self.save_figure(fig, exp_number, filename_prefix="fft_draw_times")
 
         # Create second plot
         fig, ax = plt.subplots()
         title = "Image Size Dependence on Varied Parameter (%s)" % varied_data_label
-        ax.set_title(title, fontsize=fontsize)
-        ax.set_xlabel("Varied Parameter (%s)" % varied_data_label, fontsize=fontsize)
-        ax.set_ylabel("Image Size (Pixels)", fontsize=fontsize)
+        ax.set_title(title)
+        ax.set_xlabel("Varied Parameter (%s)" % varied_data_label)
+        ax.set_ylabel("Image Size (Pixels)")
 
         # If the varied data is an array of labels, then do a scatter plot
         # where the x axis is a series of string labels.
@@ -1140,8 +1143,6 @@ class Experiment:
 
             ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%03d"))
 
-            ax.tick_params(labelsize=24)
-            ax.grid(True)
             self.save_figure(fig, exp_number, filename_prefix="image_size_dependence")
 
 
@@ -1206,7 +1207,7 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 def main():
     e = Experiment(exp_dat_dir="plotting_fixes")
 
-    # e.time_vs_flux_on_gal_size()
+    e.time_vs_flux_on_gal_size()
     # e.time_vs_flux_on_gal_shape()
     # e.time_vs_flux_on_profile()
     # e.time_vs_flux_on_psf()
@@ -1214,7 +1215,7 @@ def main():
     # e.time_vs_flux_on_optical_psf_vary_obscuration()
     # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
     # e.fft_image_size_vs_flux_vary_lam_over_diam()
-    e.fft_draw_time_vs_image_size_consolidated()
+    # e.fft_draw_time_vs_image_size_consolidated()
 
 
     # e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
