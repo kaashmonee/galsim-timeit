@@ -950,12 +950,12 @@ class Experiment:
         exp_num = 9
         method="phot"
         self.time_vs_flux_on_gal_size(method=method)
-        # self.time_vs_flux_on_gal_shape(method=method)
-        # self.time_vs_flux_on_profile(method=method)
-        # self.time_vs_flux_on_psf(method=method)
-        # self.time_vs_flux_on_optical_psf_params(method=method)
-        # self.time_vs_flux_on_optical_psf_vary_obscuration(method=method)
-        # self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method=method)
+        self.time_vs_flux_on_gal_shape(method=method)
+        self.time_vs_flux_on_profile(method=method)
+        self.time_vs_flux_on_psf(method=method)
+        self.time_vs_flux_on_optical_psf_params(method=method)
+        self.time_vs_flux_on_optical_psf_vary_obscuration(method=method)
+        self.time_vs_flux_on_optical_psf_vary_lam_over_diam(method=method)
 
         self.plot_fft_draw_time_vs_image_size(
             self.fft_draw_times,
@@ -1189,11 +1189,11 @@ def main():
     # e.time_vs_flux_on_gal_shape()
     # e.time_vs_flux_on_profile()
     # e.time_vs_flux_on_psf()
-    e.time_vs_flux_on_optical_psf_params()
-    e.time_vs_flux_on_optical_psf_vary_obscuration()
-    e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
+    # e.time_vs_flux_on_optical_psf_params()
+    # e.time_vs_flux_on_optical_psf_vary_obscuration()
+    # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
     # e.fft_image_size_vs_flux_vary_lam_over_diam()
-    # e.fft_draw_time_vs_image_size_consolidated()
+    e.fft_draw_time_vs_image_size_consolidated()
 
 
     # e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
