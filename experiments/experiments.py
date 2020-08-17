@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 # DEBUGGING TOOLS #
-# import pdb
+import pdb
 # END DEBUGING TOOLS #
 
 class Experiment:
@@ -235,6 +235,12 @@ class Experiment:
             self.compute_fft_draw_time_stats(
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
+
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            # pdb.set_trace()
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+            draw_axis.plot(t.flux_scale_disp, mean_times)
 
 
         legend_labels.extend(["q = %f\n%s %s" % (q, annot, method) for (q, annot) in zip(gal_qs, best_fit_line_equations)])
@@ -1154,17 +1160,17 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 
 
 def main():
-    e = Experiment(exp_dat_dir="test_time_v_image_size")
+    e = Experiment(exp_dat_dir="plotting_fixes")
 
     # e.time_vs_flux_on_gal_size()
-    # e.time_vs_flux_on_gal_shape()
+    e.time_vs_flux_on_gal_shape()
     # e.time_vs_flux_on_profile()
     # e.time_vs_flux_on_psf()
     # e.time_vs_flux_on_optical_psf_params()
     # e.time_vs_flux_on_optical_psf_vary_obscuration()
     # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
     # e.fft_image_size_vs_flux_vary_lam_over_diam()
-    e.fft_draw_time_vs_image_size_consolidated()
+    # e.fft_draw_time_vs_image_size_consolidated()
 
 
     # e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
