@@ -1,5 +1,6 @@
 from timer import Timer
 from timer.helpers import get_axis_legend_labels
+from timer.helpers import get_most_recently_drawn_color
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
@@ -240,7 +241,9 @@ class Experiment:
             mean_time = fft_draw_times[-1]
             # pdb.set_trace()
             mean_times = np.array([mean_time] * len(t.flux_scale_disp))
-            draw_axis.plot(t.flux_scale_disp, mean_times)
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
 
 
         legend_labels.extend(["q = %f\n%s %s" % (q, annot, method) for (q, annot) in zip(gal_qs, best_fit_line_equations)])
