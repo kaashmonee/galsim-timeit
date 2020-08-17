@@ -143,6 +143,7 @@ class Experiment:
         alt_lines = [draw_ax.lines[line_num] for line_num in range(0, len(draw_ax.lines), 2)]
         draw_ax.legend(alt_lines, legend_labels, fontsize=self.default_fontsize)
 
+
         fft_draw_time_title = "FFT Drawing Time vs. Image Size\nExperiment 1: Varying half_light_radius"
 
         self.fft_draw_times.extend(fft_draw_times)
@@ -190,12 +191,9 @@ class Experiment:
         gal_beta = 23
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
             (fig, axs) = plot
-
-        init_axis = axs[0]
-        draw_axis = axs[1]
 
         best_fit_line_equations = []
 
@@ -208,7 +206,6 @@ class Experiment:
         for gal_q in gal_qs:
             t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
-            t.plot_init_times(axis=init_axis)
 
             mod_gal_objs = []
             shape = galsim.Shear(q=gal_q, beta=gal_beta * galsim.degrees)
@@ -251,14 +248,13 @@ class Experiment:
 
         legend_labels.extend(["q = %f\n%s %s" % (q, annot, method) for (q, annot) in zip(gal_qs, best_fit_line_equations)])
 
-        title0 = axs[0].get_title() + "\nVarying q value (shear)"
-        title1 = axs[1].get_title() + "\nVarying q value (shear)"
+        title = draw_axis.get_title() + "\nVarying q value (shear)"
 
-        axs[0].set_title(title0)
-        axs[1].set_title(title1)
+        draw_axis.set_title(title)
 
-        axs[0].legend(legend_labels)
-        axs[1].legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -301,12 +297,10 @@ class Experiment:
         exp_num = 3
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
             (fig, axs) = plot
 
-        init_axis = axs[0]
-        draw_axis = axs[1]
         psf = "kolmogorov"
 
         best_fit_line_equations = []
@@ -318,7 +312,6 @@ class Experiment:
         for gal_name in Timer.GALAXY_NAMES:
             t = Timer(gal_name, flux_range=self.default_flux_range)
             t.time_init()
-            t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf)
             t.compute_phot_draw_times(method=method)
@@ -349,9 +342,7 @@ class Experiment:
             color = get_most_recently_drawn_color(draw_axis)
             draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
 
-        axs[0].set_title("Init Time for Different Galaxy Profiles")
-        axs[1].set_title("Time vs. Photon Shooting for Different Profiles Convolved with %s PSF" % psf)
-        axs[0].legend()
+        draw_axis.set_title("Time vs. Photon Shooting for Different Profiles Convolved with %s PSF" % psf)
 
         # This is done because of the way get_legend_handles_lables() returns and because
         # of the fact that the Timer class has a default method of setting labels by galaxy name.
@@ -359,13 +350,15 @@ class Experiment:
         # The 2nd element is a list of the legend labels. We furthermore only want to 
         # modify the first 4 labels since they represent hte labels for the plot, so we 
         # split up the original legend_labels list into 2.
-        line_legend_labels_to_modify = axs[1].get_legend_handles_labels()[1][0:5]
-        rest = axs[1].get_legend_handles_labels()[1][5:]
+        line_legend_labels_to_modify = draw_axis.get_legend_handles_labels()[1][0:5]
+        rest = draw_axis.get_legend_handles_labels()[1][5:]
 
         labels_annotated_half = [label + "\n%s" % annot for (label, annot) in zip(line_legend_labels_to_modify, best_fit_line_equations)]
-        ax1labels = list(labels_annotated_half) + list(rest)
+        legend_labels = list(labels_annotated_half) + list(rest)
 
-        axs[1].legend(ax1labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -1207,9 +1200,9 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 def main():
     e = Experiment(exp_dat_dir="plotting_fixes")
 
-    e.time_vs_flux_on_gal_size()
+    # e.time_vs_flux_on_gal_size()
     # e.time_vs_flux_on_gal_shape()
-    # e.time_vs_flux_on_profile()
+    e.time_vs_flux_on_profile()
     # e.time_vs_flux_on_psf()
     # e.time_vs_flux_on_optical_psf_params()
     # e.time_vs_flux_on_optical_psf_vary_obscuration()
