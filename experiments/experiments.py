@@ -1,5 +1,6 @@
 from timer import Timer
 from timer.helpers import get_axis_legend_labels
+from timer.helpers import get_most_recently_drawn_color
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
@@ -9,7 +10,7 @@ import os
 from pathlib import Path
 
 # DEBUGGING TOOLS #
-# import pdb
+import pdb
 # END DEBUGING TOOLS #
 
 class Experiment:
@@ -46,6 +47,9 @@ class Experiment:
 
         self.default_flux_range = default_flux_range
 
+        # Plotting...
+        self.default_fontsize = 24
+
 
     def time_vs_flux_on_gal_size(self, method="phot", plot:tuple=None, legend_labels=[]):
         """
@@ -69,12 +73,9 @@ class Experiment:
         half_light_radii = np.linspace(0.5, 1.5, 5)
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_ax = plt.subplots()
         else:
-            (fig, axs) = plot
-
-        init_ax = axs[0]
-        draw_ax = axs[1]
+            (fig, draw_ax) = plot
 
         best_fit_equations = []
 
@@ -97,8 +98,6 @@ class Experiment:
 
             best_fit_equations.append(t.draw_time_line_annotation)
 
-
-            t.plot_init_times(axis=init_ax)
             t.plot_draw_times(axis=draw_ax)
 
             # algorithm:
@@ -124,19 +123,26 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_ax)
+            draw_ax.plot(t.flux_scale_disp, mean_times, color=color)
+
         # plot the image times vs image size using the std dev list as the 
         # error bars
 
 
         legend_labels.extend(["r = %f\n%s %s" % (r, annotation, method) for (r, annotation) in zip(half_light_radii, best_fit_equations)])
 
-        title0 = axs[0].get_title() + "\nVarying half_light_radius"
-        title1 = axs[1].get_title() + "\nVarying half_light_radius"
-        axs[0].set_title(title0)
-        axs[1].set_title(title1)
+        title = draw_ax.get_title() + "\nVarying half_light_radius"
+        draw_ax.set_title(title)
 
-        axs[0].legend(legend_labels)
-        axs[1].legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_ax.lines[line_num] for line_num in range(0, len(draw_ax.lines), 2)]
+        draw_ax.legend(alt_lines, legend_labels, fontsize=self.default_fontsize)
+
 
         fft_draw_time_title = "FFT Drawing Time vs. Image Size\nExperiment 1: Varying half_light_radius"
 
@@ -185,12 +191,9 @@ class Experiment:
         gal_beta = 23
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
-
-        init_axis = axs[0]
-        draw_axis = axs[1]
+            (fig, draw_axis) = plot
 
         best_fit_line_equations = []
 
@@ -203,7 +206,6 @@ class Experiment:
         for gal_q in gal_qs:
             t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
-            t.plot_init_times(axis=init_axis)
 
             mod_gal_objs = []
             shape = galsim.Shear(q=gal_q, beta=gal_beta * galsim.degrees)
@@ -236,17 +238,23 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
+
 
         legend_labels.extend(["q = %f\n%s %s" % (q, annot, method) for (q, annot) in zip(gal_qs, best_fit_line_equations)])
 
-        title0 = axs[0].get_title() + "\nVarying q value (shear)"
-        title1 = axs[1].get_title() + "\nVarying q value (shear)"
+        title = draw_axis.get_title() + "\nVarying q value (shear)"
 
-        axs[0].set_title(title0)
-        axs[1].set_title(title1)
+        draw_axis.set_title(title)
 
-        axs[0].legend(legend_labels)
-        axs[1].legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -289,12 +297,10 @@ class Experiment:
         exp_num = 3
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
+            (fig, draw_axis) = plot
 
-        init_axis = axs[0]
-        draw_axis = axs[1]
         psf = "kolmogorov"
 
         best_fit_line_equations = []
@@ -306,7 +312,6 @@ class Experiment:
         for gal_name in Timer.GALAXY_NAMES:
             t = Timer(gal_name, flux_range=self.default_flux_range)
             t.time_init()
-            t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf)
             t.compute_phot_draw_times(method=method)
@@ -330,9 +335,14 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
-        axs[0].set_title("Init Time for Different Galaxy Profiles")
-        axs[1].set_title("Time vs. Photon Shooting for Different Profiles Convolved with %s PSF" % psf)
-        axs[0].legend()
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
+
+        draw_axis.set_title("Time vs. Photon Shooting for Different Profiles Convolved with %s PSF" % psf)
 
         # This is done because of the way get_legend_handles_lables() returns and because
         # of the fact that the Timer class has a default method of setting labels by galaxy name.
@@ -340,13 +350,15 @@ class Experiment:
         # The 2nd element is a list of the legend labels. We furthermore only want to 
         # modify the first 4 labels since they represent hte labels for the plot, so we 
         # split up the original legend_labels list into 2.
-        line_legend_labels_to_modify = axs[1].get_legend_handles_labels()[1][0:5]
-        rest = axs[1].get_legend_handles_labels()[1][5:]
+        line_legend_labels_to_modify = draw_axis.get_legend_handles_labels()[1][0:5]
+        rest = draw_axis.get_legend_handles_labels()[1][5:]
 
         labels_annotated_half = [label + "\n%s" % annot for (label, annot) in zip(line_legend_labels_to_modify, best_fit_line_equations)]
-        ax1labels = list(labels_annotated_half) + list(rest)
+        legend_labels = list(labels_annotated_half) + list(rest)
 
-        axs[1].legend(ax1labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -385,12 +397,9 @@ class Experiment:
         """
         exp_num = 4
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
-
-        init_axis = axs[0]
-        draw_axis = axs[1]
+            (fig, draw_axis) = plot
 
         galaxy = "sersic"
         lines = []
@@ -403,7 +412,6 @@ class Experiment:
             t = Timer(galaxy, flux_range=self.default_flux_range)
 
             t.time_init()
-            t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf)
 
@@ -428,17 +436,25 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
+
         temp_labels = [(psf+" %s" % method) for psf in Timer.PSFS]
         
-        title1 = "Time vs. Photon Shooting for Sersic Profile Convolved with Various PSFs"
-        axs[1].set_title(title1)
+        title = "Time vs. Photon Shooting for Sersic Profile Convolved with Various PSFs"
+        draw_axis.set_title(title)
 
         temp_labels = [label+"\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
 
         legend_labels.extend(temp_labels)
 
-        axs[0].legend(legend_labels)
-        axs[1].legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -510,12 +526,9 @@ class Experiment:
         ]
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
-
-        init_axis = axs[0]
-        draw_axis = axs[1]
+            (fig, draw_axis) = plot
 
         galaxy = "sersic"
         psf = "optical"
@@ -533,8 +546,6 @@ class Experiment:
 
             t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
-
-            t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf, **params)
 
@@ -559,6 +570,13 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
+
 
         temp_labels = [
             "none",
@@ -570,16 +588,16 @@ class Experiment:
         temp_labels = [label + " %s" % method for label in temp_labels]
 
 
-        title1 = "Time for Photon Shooting vs. Flux with Sersic Profile Convolved with Optical PSF"
+        title = "Time for Photon Shooting vs. Flux with Sersic Profile Convolved with Optical PSF"
 
-        axs[1].set_title(title1)
+        draw_axis.set_title(title)
 
         temp_labels = [label + "\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
-
         legend_labels.extend(temp_labels)
 
-        axs[0].legend(legend_labels)
-        axs[1].legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -622,12 +640,9 @@ class Experiment:
         exp_num = 6
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
-
-        init_axis = axs[0]
-        draw_axis = axs[1]
+            (fig, draw_axis) = plot
 
         galaxy = "sersic"
         psf = "optical"
@@ -647,8 +662,6 @@ class Experiment:
 
             t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
-
-            t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf, **params)
 
@@ -673,16 +686,23 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
+
 
         temp_labels = ["obscuration = %f %s" % (o, method) for o in obscurations]
-
-        init_axis.legend(legend_labels)
 
         temp_labels = [label+"\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
 
         legend_labels.extend(temp_labels)
 
-        draw_axis.legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -723,12 +743,10 @@ class Experiment:
         """
         exp_num = 7
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
+            (fig, draw_axis) = plot
 
-        init_axis = axs[0]
-        draw_axis = axs[1]
 
         galaxy = "sersic"
         psf = "optical"
@@ -761,8 +779,6 @@ class Experiment:
             t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
 
-            t.plot_init_times(axis=init_axis)
-
             t.set_psf(psf, **params)
 
             t.compute_phot_draw_times(method=method)
@@ -786,6 +802,13 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
+
 
         temp_labels = ["lam_over_diam = %f arcsecs %s" % (lod, method) for lod in lam_over_diams]
 
@@ -794,8 +817,10 @@ class Experiment:
 
         legend_labels.extend(temp_labels)
 
-        init_axis.legend(legend_labels)
-        draw_axis.legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
+
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -985,6 +1010,15 @@ class Experiment:
 
         filename = "experiment_%d.png" % experiment_number
 
+        # Get the axis and increase the font for all the plot and axes titles.
+        # Also make some other modifications to the plots.
+        axis = figure.get_axes()[0]
+        axis.grid(True)
+        axis.tick_params(labelsize=self.default_fontsize)
+        axis.set_title(axis.get_title(), fontsize=self.default_fontsize)
+        axis.set_xlabel(axis.get_xlabel(), fontsize=self.default_fontsize)
+        axis.set_ylabel(axis.get_ylabel(), fontsize=self.default_fontsize)
+
         # Add the option to include a prefix in case we want to call this method
         # multiple times within the same routine.
         filename = filename_prefix + filename
@@ -1037,7 +1071,6 @@ class Experiment:
 
         # Create first plot
         fig, ax = plt.subplots()
-        fontsize = 24
         marker_size = 250
 
         ax.errorbar(image_sizes, np.array(draw_times),
@@ -1056,20 +1089,18 @@ class Experiment:
             else:
                 title = "FFT Image Drawing Time vs. k Image Size on Varied Parameter (%s)" % varied_data_label
 
-        ax.set_title(title, fontsize=fontsize)
-        ax.set_xlabel("Image Size (Pixels)", fontsize=fontsize)
-        ax.set_ylabel("Time (s)", fontsize=fontsize)
+        ax.set_title(title)
+        ax.set_xlabel("Image Size (Pixels)")
+        ax.set_ylabel("Time (s)")
 
-        ax.tick_params(labelsize=24)
-        ax.grid(True)
         self.save_figure(fig, exp_number, filename_prefix="fft_draw_times")
 
         # Create second plot
         fig, ax = plt.subplots()
         title = "Image Size Dependence on Varied Parameter (%s)" % varied_data_label
-        ax.set_title(title, fontsize=fontsize)
-        ax.set_xlabel("Varied Parameter (%s)" % varied_data_label, fontsize=fontsize)
-        ax.set_ylabel("Image Size (Pixels)", fontsize=fontsize)
+        ax.set_title(title)
+        ax.set_xlabel("Varied Parameter (%s)" % varied_data_label)
+        ax.set_ylabel("Image Size (Pixels)")
 
         # If the varied data is an array of labels, then do a scatter plot
         # where the x axis is a series of string labels.
@@ -1090,8 +1121,6 @@ class Experiment:
 
             ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%03d"))
 
-            ax.tick_params(labelsize=24)
-            ax.grid(True)
             self.save_figure(fig, exp_number, filename_prefix="image_size_dependence")
 
 
@@ -1154,7 +1183,7 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 
 
 def main():
-    e = Experiment(exp_dat_dir="test_time_v_image_size")
+    e = Experiment(exp_dat_dir="plotting_fixes")
 
     # e.time_vs_flux_on_gal_size()
     # e.time_vs_flux_on_gal_shape()

@@ -43,3 +43,15 @@ def get_axis_legend_labels(axis):
     The 2nd element is a list of the legend labels. 
     """
     return [text.get_text() for text in axis.get_legend().texts]
+
+def get_plotted_colors(axis):
+    """
+    Returns a list of colors used for each Line2D object in the axis.
+    """
+    return [line.get_color() for line in axis.get_lines()]
+
+def get_most_recently_drawn_color(axis):
+    """
+    Returns the color of the most recent line drawn.
+    """
+    return axis.get_lines()[-1].get_color()
