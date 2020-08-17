@@ -75,7 +75,7 @@ class Experiment:
         if plot is None:
             fig, draw_ax = plt.subplots()
         else:
-            (fig, axs) = plot
+            (fig, draw_ax) = plot
 
         best_fit_equations = []
 
@@ -193,7 +193,7 @@ class Experiment:
         if plot is None:
             fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
+            (fig, draw_axis) = plot
 
         best_fit_line_equations = []
 
@@ -299,7 +299,7 @@ class Experiment:
         if plot is None:
             fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
+            (fig, draw_axis) = plot
 
         psf = "kolmogorov"
 
@@ -397,12 +397,9 @@ class Experiment:
         """
         exp_num = 4
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
-
-        init_axis = axs[0]
-        draw_axis = axs[1]
+            (fig, draw_axis) = plot
 
         galaxy = "sersic"
         lines = []
@@ -415,7 +412,6 @@ class Experiment:
             t = Timer(galaxy, flux_range=self.default_flux_range)
 
             t.time_init()
-            t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf)
 
@@ -449,15 +445,16 @@ class Experiment:
 
         temp_labels = [(psf+" %s" % method) for psf in Timer.PSFS]
         
-        title1 = "Time vs. Photon Shooting for Sersic Profile Convolved with Various PSFs"
-        axs[1].set_title(title1)
+        title = "Time vs. Photon Shooting for Sersic Profile Convolved with Various PSFs"
+        draw_axis.set_title(title)
 
         temp_labels = [label+"\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
 
         legend_labels.extend(temp_labels)
 
-        axs[0].legend(legend_labels)
-        axs[1].legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -529,12 +526,9 @@ class Experiment:
         ]
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
-
-        init_axis = axs[0]
-        draw_axis = axs[1]
+            (fig, draw_axis) = plot
 
         galaxy = "sersic"
         psf = "optical"
@@ -552,8 +546,6 @@ class Experiment:
 
             t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
-
-            t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf, **params)
 
@@ -596,16 +588,16 @@ class Experiment:
         temp_labels = [label + " %s" % method for label in temp_labels]
 
 
-        title1 = "Time for Photon Shooting vs. Flux with Sersic Profile Convolved with Optical PSF"
+        title = "Time for Photon Shooting vs. Flux with Sersic Profile Convolved with Optical PSF"
 
-        axs[1].set_title(title1)
+        draw_axis.set_title(title)
 
         temp_labels = [label + "\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
-
         legend_labels.extend(temp_labels)
 
-        axs[0].legend(legend_labels)
-        axs[1].legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -648,12 +640,9 @@ class Experiment:
         exp_num = 6
 
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
-
-        init_axis = axs[0]
-        draw_axis = axs[1]
+            (fig, draw_axis) = plot
 
         galaxy = "sersic"
         psf = "optical"
@@ -673,8 +662,6 @@ class Experiment:
 
             t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
-
-            t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf, **params)
 
@@ -709,13 +696,13 @@ class Experiment:
 
         temp_labels = ["obscuration = %f %s" % (o, method) for o in obscurations]
 
-        init_axis.legend(legend_labels)
-
         temp_labels = [label+"\n%s" % annot for (label, annot) in zip(temp_labels, lines)]
 
         legend_labels.extend(temp_labels)
 
-        draw_axis.legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -756,12 +743,10 @@ class Experiment:
         """
         exp_num = 7
         if plot is None:
-            fig, axs = plt.subplots(1, 2)
+            fig, draw_axis = plt.subplots()
         else:
-            (fig, axs) = plot
+            (fig, draw_axis) = plot
 
-        init_axis = axs[0]
-        draw_axis = axs[1]
 
         galaxy = "sersic"
         psf = "optical"
@@ -793,8 +778,6 @@ class Experiment:
 
             t = Timer(galaxy, flux_range=self.default_flux_range)
             t.time_init()
-
-            t.plot_init_times(axis=init_axis)
 
             t.set_psf(psf, **params)
 
@@ -834,8 +817,10 @@ class Experiment:
 
         legend_labels.extend(temp_labels)
 
-        init_axis.legend(legend_labels)
-        draw_axis.legend(legend_labels)
+        # Fix the axis legend...
+        alt_lines = [draw_axis.lines[line_num] for line_num in range(0, len(draw_axis.lines), 2)]
+        draw_axis.legend(alt_lines, legend_labels, fontsize="x-large")
+
 
         self.fft_draw_times.extend(fft_draw_times)
         self.fft_draw_time_stdev.extend(fft_draw_times)
@@ -1202,11 +1187,11 @@ def main():
 
     # e.time_vs_flux_on_gal_size()
     # e.time_vs_flux_on_gal_shape()
-    e.time_vs_flux_on_profile()
+    # e.time_vs_flux_on_profile()
     # e.time_vs_flux_on_psf()
-    # e.time_vs_flux_on_optical_psf_params()
-    # e.time_vs_flux_on_optical_psf_vary_obscuration()
-    # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
+    e.time_vs_flux_on_optical_psf_params()
+    e.time_vs_flux_on_optical_psf_vary_obscuration()
+    e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
     # e.fft_image_size_vs_flux_vary_lam_over_diam()
     # e.fft_draw_time_vs_image_size_consolidated()
 
