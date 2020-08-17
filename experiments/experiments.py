@@ -246,7 +246,6 @@ class Experiment:
 
             # Plot the FFT drawing time on the PS plot.
             mean_time = fft_draw_times[-1]
-            # pdb.set_trace()
             mean_times = np.array([mean_time] * len(t.flux_scale_disp))
 
             color = get_most_recently_drawn_color(draw_axis)
@@ -346,6 +345,13 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
+
         axs[0].set_title("Init Time for Different Galaxy Profiles")
         axs[1].set_title("Time vs. Photon Shooting for Different Profiles Convolved with %s PSF" % psf)
         axs[0].legend()
@@ -443,6 +449,13 @@ class Experiment:
             self.compute_fft_draw_time_stats(
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
+
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
 
         temp_labels = [(psf+" %s" % method) for psf in Timer.PSFS]
         
@@ -575,6 +588,13 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
+
 
         temp_labels = [
             "none",
@@ -689,6 +709,13 @@ class Experiment:
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
 
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
+
 
         temp_labels = ["obscuration = %f %s" % (o, method) for o in obscurations]
 
@@ -801,6 +828,13 @@ class Experiment:
             self.compute_fft_draw_time_stats(
                 t, fft_draw_times, fft_draw_time_stdev, fft_image_sizes
             )
+
+            # Plot the FFT drawing time on the PS plot.
+            mean_time = fft_draw_times[-1]
+            mean_times = np.array([mean_time] * len(t.flux_scale_disp))
+
+            color = get_most_recently_drawn_color(draw_axis)
+            draw_axis.plot(t.flux_scale_disp, mean_times, color=color)
 
 
         temp_labels = ["lam_over_diam = %f arcsecs %s" % (lod, method) for lod in lam_over_diams]
@@ -1172,15 +1206,15 @@ class PhotonAndFFTPlottingExperiment(Experiment):
 def main():
     e = Experiment(exp_dat_dir="plotting_fixes")
 
-    e.time_vs_flux_on_gal_size()
-    e.time_vs_flux_on_gal_shape()
+    # e.time_vs_flux_on_gal_size()
+    # e.time_vs_flux_on_gal_shape()
     # e.time_vs_flux_on_profile()
     # e.time_vs_flux_on_psf()
     # e.time_vs_flux_on_optical_psf_params()
     # e.time_vs_flux_on_optical_psf_vary_obscuration()
     # e.time_vs_flux_on_optical_psf_vary_lam_over_diam()
     # e.fft_image_size_vs_flux_vary_lam_over_diam()
-    # e.fft_draw_time_vs_image_size_consolidated()
+    e.fft_draw_time_vs_image_size_consolidated()
 
 
     # e = PhotonAndFFTPlottingExperiment(exp_dat_dir="testing_horizontals")
